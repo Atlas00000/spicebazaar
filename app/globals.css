@@ -1,0 +1,450 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  /* Updated color tokens to match Spice Bazaar design brief with warm, vibrant colors */
+  --background: oklch(0.98 0.02 85); /* Soft cream #fefce8 */
+  --foreground: oklch(0.35 0.01 250); /* Charcoal gray #4b5563 */
+  --card: oklch(1 0 0); /* Pure white #ffffff */
+  --card-foreground: oklch(0.35 0.01 250); /* Charcoal gray */
+  --popover: oklch(1 0 0); /* Pure white */
+  --popover-foreground: oklch(0.35 0.01 250); /* Charcoal gray */
+  --primary: oklch(0.55 0.15 35); /* Burnt orange #c65d32 */
+  --primary-foreground: oklch(1 0 0); /* Pure white */
+  --secondary: oklch(0.8 0.12 85); /* Turmeric yellow #fbbf24 */
+  --secondary-foreground: oklch(0.35 0.01 250); /* Charcoal gray */
+  --muted: oklch(0.98 0.02 85); /* Soft cream */
+  --muted-foreground: oklch(0.35 0.01 250); /* Charcoal gray */
+  --accent: oklch(0.6 0.22 25); /* Chili red #ef4444 */
+  --accent-foreground: oklch(1 0 0); /* Pure white */
+  --destructive: oklch(0.6 0.22 25); /* Chili red */
+  --destructive-foreground: oklch(1 0 0); /* Pure white */
+  --border: oklch(0.85 0.01 250); /* Light gray #d1d5db */
+  --input: oklch(0.97 0.01 250); /* Light gray #f9fafb */
+  --ring: oklch(0.55 0.15 35); /* Burnt orange */
+  --chart-1: oklch(0.8 0.15 90); /* Bright yellow */
+  --chart-2: oklch(0.65 0.25 25); /* Bright red */
+  --chart-3: oklch(0.7 0.18 45); /* Bright orange */
+  --chart-4: oklch(0.85 0.12 85); /* Soft yellow */
+  --chart-5: oklch(0.7 0.15 160); /* Bright green */
+  --radius: 0.5rem;
+  --sidebar: oklch(0.98 0.02 85); /* Soft cream */
+  --sidebar-foreground: oklch(0.35 0.01 250); /* Charcoal gray */
+  --sidebar-primary: oklch(0.55 0.15 35); /* Burnt orange */
+  --sidebar-primary-foreground: oklch(1 0 0); /* Pure white */
+  --sidebar-accent: oklch(0.8 0.12 85); /* Turmeric yellow */
+  --sidebar-accent-foreground: oklch(0.35 0.01 250); /* Charcoal gray */
+  --sidebar-border: oklch(0.85 0.01 250); /* Light gray */
+  --sidebar-ring: oklch(0.55 0.15 35); /* Burnt orange */
+}
+
+.dark {
+  /* Updated dark mode colors to maintain warm spice theme */
+  --background: oklch(0.15 0.02 35); /* Dark burnt orange base */
+  --foreground: oklch(0.95 0.02 85); /* Warm cream text */
+  --card: oklch(0.2 0.02 35); /* Darker card background */
+  --card-foreground: oklch(0.95 0.02 85); /* Warm cream text */
+  --popover: oklch(0.2 0.02 35); /* Darker popover */
+  --popover-foreground: oklch(0.95 0.02 85); /* Warm cream text */
+  --primary: oklch(0.7 0.15 35); /* Lighter burnt orange */
+  --primary-foreground: oklch(0.15 0.02 35); /* Dark background */
+  --secondary: oklch(0.6 0.12 85); /* Muted turmeric */
+  --secondary-foreground: oklch(0.95 0.02 85); /* Warm cream text */
+  --muted: oklch(0.25 0.02 35); /* Muted dark background */
+  --muted-foreground: oklch(0.7 0.02 85); /* Muted cream text */
+  --accent: oklch(0.7 0.22 25); /* Brighter chili red */
+  --accent-foreground: oklch(0.95 0.02 85); /* Warm cream text */
+  --destructive: oklch(0.7 0.22 25); /* Brighter chili red */
+  --destructive-foreground: oklch(0.95 0.02 85); /* Warm cream text */
+  --border: oklch(0.3 0.02 35); /* Dark border */
+  --input: oklch(0.25 0.02 35); /* Dark input */
+  --ring: oklch(0.7 0.15 35); /* Lighter burnt orange */
+  --chart-1: oklch(0.7 0.15 90); /* Muted yellow */
+  --chart-2: oklch(0.7 0.25 25); /* Muted red */
+  --chart-3: oklch(0.75 0.18 45); /* Muted orange */
+  --chart-4: oklch(0.8 0.12 85); /* Soft yellow */
+  --chart-5: oklch(0.65 0.15 160); /* Muted green */
+  --sidebar: oklch(0.18 0.02 35); /* Dark sidebar */
+  --sidebar-foreground: oklch(0.95 0.02 85); /* Warm cream text */
+  --sidebar-primary: oklch(0.7 0.15 35); /* Lighter burnt orange */
+  --sidebar-primary-foreground: oklch(0.15 0.02 35); /* Dark background */
+  --sidebar-accent: oklch(0.6 0.12 85); /* Muted turmeric */
+  --sidebar-accent-foreground: oklch(0.95 0.02 85); /* Warm cream text */
+  --sidebar-border: oklch(0.3 0.02 35); /* Dark border */
+  --sidebar-ring: oklch(0.7 0.15 35); /* Lighter burnt orange */
+}
+
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Adding custom CSS for 3D flip animations and interactive effects */
+@layer utilities {
+  /* 3D Perspective and Transform Utilities */
+  .perspective-1000 {
+    perspective: 1000px;
+  }
+
+  .transform-style-preserve-3d {
+    transform-style: preserve-3d;
+  }
+
+  .backface-hidden {
+    backface-visibility: hidden;
+  }
+
+  .rotate-y-180 {
+    transform: rotateY(180deg);
+  }
+
+  /* Enhanced recipe card 3D effects */
+  .recipe-card-3d {
+    perspective: 2000px;
+    transform-style: preserve-3d;
+  }
+
+  .recipe-card-3d .absolute {
+    backface-visibility: hidden;
+    transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+  }
+
+  .recipe-card-3d .rotate-y-180 .absolute:last-child {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  }
+
+  /* Enhanced ingredient styling */
+  .ingredient-item {
+    position: relative;
+    padding: 8px 16px;
+    margin: 4px 0;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+  }
+
+  .ingredient-item:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateX(8px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  /* Smooth scrolling for parallax effect */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Custom animations for spice particles */
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0px) rotate(0deg);
+    }
+    50% {
+      transform: translateY(-20px) rotate(180deg);
+    }
+  }
+
+  @keyframes spice-shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+
+  @keyframes gentle-pulse {
+    0%,
+    100% {
+      opacity: 0.6;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.8;
+      transform: scale(1.05);
+    }
+  }
+
+  /* Enhanced floating spice animation */
+  .animate-float {
+    animation: float 8s ease-in-out infinite;
+    will-change: transform, opacity;
+  }
+
+  @keyframes float {
+    0%, 100% { 
+      transform: translateY(0px) rotate(0deg) scale(1); 
+      opacity: 0.4;
+    }
+    25% { 
+      transform: translateY(-30px) rotate(90deg) scale(1.1); 
+      opacity: 0.8;
+    }
+    50% { 
+      transform: translateY(-60px) rotate(180deg) scale(0.9); 
+      opacity: 0.6;
+    }
+    75% { 
+      transform: translateY(-30px) rotate(270deg) scale(1.1); 
+      opacity: 0.8;
+    }
+  }
+
+  .animate-spice-shimmer {
+    background: linear-gradient(90deg, transparent, rgba(var(--primary), 0.4), transparent);
+    background-size: 200% 100%;
+    animation: spice-shimmer 3s infinite;
+  }
+
+  .animate-gentle-pulse {
+    animation: gentle-pulse 4s ease-in-out infinite;
+  }
+
+  /* Enhanced spice card interactions */
+  .spice-card-enhanced {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: transform;
+  }
+
+  .spice-card-enhanced::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.6s;
+  }
+
+  .spice-card-enhanced:hover::before {
+    left: 100%;
+  }
+
+  .spice-card-enhanced:hover {
+    transform: translateY(-12px) scale(1.02);
+    box-shadow: 
+      0 25px 50px -12px rgba(0, 0, 0, 0.25),
+      0 0 0 1px rgba(198, 93, 50, 0.1);
+  }
+
+  /* Hover effects for interactive elements */
+  .hover-lift {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  }
+
+  /* Parallax scrolling effect */
+  .parallax-bg {
+    background-attachment: fixed;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+  }
+
+  /* Staggered animation delays */
+  .animate-delay-100 {
+    animation-delay: 100ms;
+  }
+
+  .animate-delay-200 {
+    animation-delay: 200ms;
+  }
+
+  .animate-delay-300 {
+    animation-delay: 300ms;
+  }
+
+  .animate-delay-400 {
+    animation-delay: 400ms;
+  }
+
+  /* Smooth transitions for all interactive elements */
+  .transition-smooth {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Enhanced button interactions */
+  .btn-enhanced {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .btn-enhanced::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+  }
+
+  .btn-enhanced:hover::before {
+    width: 300px;
+    height: 300px;
+  }
+
+  .btn-enhanced:active {
+    transform: scale(0.95);
+  }
+
+  /* Enhanced input focus animations */
+  input:focus {
+    transform: scale(1.02);
+    box-shadow: 0 0 0 3px rgba(198, 93, 50, 0.1);
+  }
+
+  input:focus-within {
+    border-color: var(--primary);
+  }
+
+  /* Enhanced card grid animations */
+  .card-grid-enhanced {
+    perspective: 1000px;
+  }
+
+  .card-grid-enhanced > * {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .card-grid-enhanced > *:hover {
+    z-index: 10;
+  }
+
+  .card-grid-enhanced > *:nth-child(1) { animation-delay: 0ms; }
+  .card-grid-enhanced > *:nth-child(2) { animation-delay: 100ms; }
+  .card-grid-enhanced > *:nth-child(3) { animation-delay: 200ms; }
+  .card-grid-enhanced > *:nth-child(4) { animation-delay: 300ms; }
+
+  /* Mobile-specific optimizations */
+  @media (max-width: 768px) {
+    /* Reduce animation complexity on mobile */
+    .animate-float {
+      animation-duration: 6s;
+    }
+    
+    /* Optimize card animations for mobile */
+    .spice-card-enhanced:hover {
+      transform: translateY(-6px) scale(1.01);
+    }
+    
+    /* Reduce particle animation complexity */
+    .spice-particle {
+      filter: blur(0.3px);
+    }
+    
+    /* Optimize button interactions for touch */
+    .btn-enhanced:active {
+      transform: scale(0.98);
+    }
+    
+    /* Mobile-friendly card grid */
+    .card-grid-enhanced > * {
+      animation-delay: 0ms !important;
+    }
+  }
+
+  /* Enhanced text gradients */
+  .gradient-text-enhanced {
+    background: linear-gradient(
+      135deg,
+      var(--primary) 0%,
+      var(--secondary) 25%,
+      var(--accent) 50%,
+      var(--secondary) 75%,
+      var(--primary) 100%
+    );
+    background-size: 300% 300%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: gradient-flow 6s ease infinite;
+  }
+
+  @keyframes gradient-flow {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+
+  /* Gradient text effect for hero */
+  .gradient-text {
+    background: linear-gradient(135deg, var(--primary), var(--secondary), var(--accent));
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: gradient-shift 4s ease infinite;
+  }
+
+  @keyframes gradient-shift {
+    0%,
+    100% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+  }
+}

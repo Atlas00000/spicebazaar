@@ -1,0 +1,16 @@
+# Development override configuration
+version: '3.8'
+
+services:
+  spice-bazaar-dev:
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+    environment:
+      - NODE_ENV=development
+      - NEXT_TELEMETRY_DISABLED=1
+      - WATCHPACK_POLLING=true
+    command: pnpm dev
+    profiles:
+      - dev
