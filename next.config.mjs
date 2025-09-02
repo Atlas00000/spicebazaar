@@ -11,15 +11,18 @@ const nextConfig = {
   },
   // Enable standalone output for Docker
   output: 'standalone',
+  // Build optimizations for Vercel
+  poweredByHeader: false,
   // Experimental features for better performance
   experimental: {
-    optimizeCss: true,
     optimizePackageImports: ['lucide-react'],
   },
   // Compiler options
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
   },
+  // Build optimizations
+  swcMinify: true,
   // Headers for security and performance
   async headers() {
     return [
