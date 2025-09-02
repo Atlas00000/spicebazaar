@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useRef, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Star, ShoppingCart, Heart, Sparkles, Globe, BookOpen, Info, Search, Filter, Menu, X } from "lucide-react"
+import { Star, ShoppingCart, Heart, Sparkles, Globe, BookOpen, Info, Search, Filter, Menu, X, Share } from "lucide-react"
 
 // Enhanced spice particle component with performance optimization
 const SpiceParticle = ({ particle, isVisible }: { particle: any; isVisible: boolean }) => (
@@ -70,7 +70,14 @@ export default function SpiceBazaarHome() {
   const [isLoading, setIsLoading] = useState(true)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isHeroVisible, setIsHeroVisible] = useState(false)
+  const [isSpiceSectionVisible, setIsSpiceSectionVisible] = useState(false)
+  const [isRecipeSectionVisible, setIsRecipeSectionVisible] = useState(false)
+  const [isCollectionsSectionVisible, setIsCollectionsSectionVisible] = useState(false)
+  const [hasInitialized, setHasInitialized] = useState(false)
   const heroRef = useRef<HTMLElement>(null)
+  const spiceSectionRef = useRef<HTMLElement>(null)
+  const recipeSectionRef = useRef<HTMLElement>(null)
+  const collectionsSectionRef = useRef<HTMLElement>(null)
 
   // Enhanced particle system with mobile optimization and performance throttling
   const spiceParticles = useMemo(() => {
@@ -92,6 +99,7 @@ export default function SpiceBazaarHome() {
   useEffect(() => {
     const timer = setTimeout(() => setAnimateSpices(true), 500)
     const loadingTimer = setTimeout(() => setIsLoading(false), 1000)
+    const initTimer = setTimeout(() => setHasInitialized(true), 1500)
     
     // Mouse movement tracking for particle interaction with throttling
     let mouseMoveTimeout: NodeJS.Timeout
@@ -109,24 +117,76 @@ export default function SpiceBazaarHome() {
     return () => {
       clearTimeout(timer)
       clearTimeout(loadingTimer)
+      clearTimeout(initTimer)
       window.removeEventListener('mousemove', handleMouseMove)
     }
   }, [])
 
-  // Intersection observer for hero section performance
+  // Intersection observers for section animations
   useEffect(() => {
-    const observer = new IntersectionObserver(
+    if (typeof window === 'undefined') return
+    
+    // Check if IntersectionObserver is supported
+    if (!('IntersectionObserver' in window)) {
+      // Fallback: show all sections immediately
+      setIsHeroVisible(true)
+      setIsSpiceSectionVisible(true)
+      setIsRecipeSectionVisible(true)
+      setIsCollectionsSectionVisible(true)
+      return
+    }
+
+    const heroObserver = new IntersectionObserver(
       ([entry]) => {
         setIsHeroVisible(entry.isIntersecting)
       },
-      { threshold: 0.1 }
+      { threshold: 0.1, rootMargin: '50px' }
     )
 
-    if (heroRef.current) {
-      observer.observe(heroRef.current)
+    const spiceObserver = new IntersectionObserver(
+      ([entry]) => {
+        setIsSpiceSectionVisible(entry.isIntersecting)
+      },
+      { threshold: 0.1, rootMargin: '50px' }
+    )
+
+    const recipeObserver = new IntersectionObserver(
+      ([entry]) => {
+        setIsRecipeSectionVisible(entry.isIntersecting)
+      },
+      { threshold: 0.1, rootMargin: '50px' }
+    )
+
+    const collectionsObserver = new IntersectionObserver(
+      ([entry]) => {
+        setIsCollectionsSectionVisible(entry.isIntersecting)
+      },
+      { threshold: 0.1, rootMargin: '50px' }
+    )
+
+    try {
+      if (heroRef.current) {
+        heroObserver.observe(heroRef.current)
+      }
+      if (spiceSectionRef.current) {
+        spiceObserver.observe(spiceSectionRef.current)
+      }
+      if (recipeSectionRef.current) {
+        recipeObserver.observe(recipeSectionRef.current)
+      }
+      if (collectionsSectionRef.current) {
+        collectionsObserver.observe(collectionsSectionRef.current)
+      }
+    } catch (error) {
+      console.warn('Intersection observer setup failed:', error)
     }
 
-    return () => observer.disconnect()
+    return () => {
+      heroObserver.disconnect()
+      spiceObserver.disconnect()
+      recipeObserver.disconnect()
+      collectionsObserver.disconnect()
+    }
   }, [])
 
   const toggleRecipeFlip = (index: number) => {
@@ -418,9 +478,9 @@ export default function SpiceBazaarHome() {
       </section>
 
       {/* Featured Spices */}
-      <section id="spices" className="py-20 bg-card/30">
+      <section ref={spiceSectionRef} id="spices" className="py-20 bg-card/30">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
+          <div className={`text-center mb-16 transition-all duration-1000 ${isSpiceSectionVisible && hasInitialized ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
             <h3 className="text-4xl font-bold font-[family-name:var(--font-playfair)] text-foreground mb-4">
               Premium Spice Collection
             </h3>
@@ -445,7 +505,7 @@ export default function SpiceBazaarHome() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 card-grid-enhanced">
+          <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 card-grid-enhanced transition-all duration-1000 ${isSpiceSectionVisible && hasInitialized ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
             {isLoading ? (
               // Loading skeleton cards
               Array.from({ length: 4 }).map((_, index) => (
@@ -465,72 +525,134 @@ export default function SpiceBazaarHome() {
               featuredSpices.map((spice, index) => (
                 <Card
                   key={index}
-                  className="group hover:shadow-2xl transition-all duration-600 hover:-translate-y-3 border-border/50 relative overflow-hidden spice-card-enhanced"
+                  className={`group hover:shadow-2xl transition-all duration-600 hover:-translate-y-3 border-border/50 relative overflow-hidden spice-card-enhanced bg-gradient-to-br from-background to-card animate-delay-${index * 100}`}
                   onMouseEnter={() => setHoveredSpice(index)}
                   onMouseLeave={() => setHoveredSpice(null)}
+                  style={{
+                    animationDelay: `${index * 100}ms`,
+                    opacity: isSpiceSectionVisible ? 1 : 0,
+                    transform: isSpiceSectionVisible ? 'translateY(0)' : 'translateY(20px)',
+                    transition: `all 0.6s ease ${index * 100}ms`
+                  }}
                 >
-                <CardHeader className="p-0">
-                  <div className="relative overflow-hidden rounded-t-lg">
-                    <LazyImage
-                      src={spice.image || "/placeholder.svg"}
-                      alt={spice.name}
-                      className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                    <Badge className="absolute top-3 right-3 bg-primary text-primary-foreground transition-all duration-300 group-hover:scale-110">
+                  <CardHeader className="p-6 pb-4">
+                    <div className="flex items-start justify-between mb-3">
+                      <Badge className="bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-all duration-300 group-hover:scale-110">
                       <Globe className="w-3 h-3 mr-1" />
                       {spice.origin.split(",")[1]}
                     </Badge>
-                    <div
-                      className={`absolute inset-0 bg-gradient-to-br from-black/90 to-black/70 backdrop-blur-sm transition-all duration-300 flex items-center justify-center p-4 ${
+                      <div className="flex items-center opacity-80 group-hover:opacity-100 transition-opacity duration-300">
+                        <Star className="w-4 h-4 fill-secondary text-secondary mr-1" />
+                        <span className="text-sm font-medium text-foreground">{spice.rating}</span>
+                      </div>
+                    </div>
+                    
+                    <CardTitle className="text-xl font-[family-name:var(--font-playfair)] mb-2 group-hover:text-primary transition-colors duration-300">
+                      {spice.name}
+                    </CardTitle>
+                    
+                    <CardDescription className="text-sm text-muted-foreground mb-3 leading-relaxed">
+                      {spice.description}
+                    </CardDescription>
+                    
+                    <div className="mb-3">
+                      <span className="text-sm font-medium text-accent font-[family-name:var(--font-dancing)] group-hover:text-accent/80 transition-colors duration-300">
+                        ✨ {spice.flavor}
+                      </span>
+                    </div>
+                  </CardHeader>
+                  
+                  <CardContent className="p-6 pt-0">
+                    <div className="mb-4">
+                      <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wide font-medium">
+                        Perfect for:
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {spice.uses.map((use, useIndex) => (
+                          <Badge 
+                            key={useIndex} 
+                            variant="secondary" 
+                            className="text-xs hover:scale-110 hover:bg-secondary/80 transition-all duration-200 cursor-pointer group-hover:bg-secondary/60"
+                          >
+                            {use}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    <div className="mb-4 p-3 bg-muted/30 rounded-lg border border-border/50 group-hover:bg-muted/50 transition-colors duration-300">
+                      <p className="text-xs text-muted-foreground mb-1 uppercase tracking-wide font-medium">
+                        Origin Story:
+                      </p>
+                      <p className="text-sm text-foreground leading-relaxed">
+                        {spice.details}
+                      </p>
+                    </div>
+                    
+                    <div className="flex items-center justify-between mb-4">
+                      <span className="text-2xl font-bold text-primary group-hover:scale-110 transition-transform duration-300">
+                        {spice.price}
+                      </span>
+                      <div className="flex items-center space-x-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300 hover:scale-105"
+                        >
+                          <Heart className="w-4 h-4 mr-1" />
+                          Wishlist
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    <Button className="w-full group-hover:bg-primary/90 transition-all duration-300 hover:scale-105 hover:shadow-lg">
+                      <ShoppingCart className="w-4 h-4 mr-2" />
+                      Add to Cart
+                    </Button>
+                  </CardContent>
+                  
+                  {/* Hover overlay with additional details */}
+                  <div
+                    className={`absolute inset-0 bg-gradient-to-br from-primary/95 via-secondary/95 to-accent/95 backdrop-blur-sm transition-all duration-500 flex items-center justify-center p-6 ${
                         hoveredSpice === index ? "opacity-100" : "opacity-0 pointer-events-none"
                       }`}
                     >
-                      <div className="text-white text-center space-y-3">
-                        <Info className="w-6 h-6 mx-auto mb-3 text-primary" />
-                        <p className="text-sm font-medium leading-relaxed">{spice.details}</p>
+                    <div className="text-white text-center space-y-4">
+                      <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Sparkles className="w-8 h-8 text-white" />
+                      </div>
+                      <h4 className="text-xl font-bold font-[family-name:var(--font-playfair)] mb-2">
+                        {spice.name}
+                      </h4>
+                      <p className="text-sm leading-relaxed opacity-90 mb-4">
+                        {spice.details}
+                      </p>
                         <div className="space-y-2">
-                          <p className="text-xs font-semibold text-secondary">Perfect for:</p>
+                        <p className="text-xs font-semibold text-white/80 uppercase tracking-wide">
+                          Culinary Applications:
+                        </p>
                           <div className="flex flex-wrap gap-2 justify-center">
                             {spice.uses.map((use, useIndex) => (
                               <Badge 
                                 key={useIndex} 
                                 variant="secondary" 
-                                className="text-xs hover:scale-110 transition-transform duration-200 cursor-pointer"
+                              className="text-xs bg-white/20 text-white border-white/30 hover:bg-white/30 transition-all duration-200"
                               >
                                 {use}
                               </Badge>
                             ))}
                           </div>
                         </div>
-                        <div className="pt-2 border-t border-white/20">
-                          <p className="text-xs text-muted-foreground">
-                            Origin: <span className="text-secondary font-semibold">{spice.origin}</span>
+                      <div className="pt-3 border-t border-white/20">
+                        <p className="text-xs text-white/70">
+                          Origin: <span className="text-white font-semibold">{spice.origin}</span>
+                        </p>
+                        <p className="text-xs text-white/70">
+                          Flavor Profile: <span className="text-white font-semibold">{spice.flavor}</span>
                           </p>
                         </div>
                       </div>
                     </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="p-6">
-                  <CardTitle className="text-xl font-[family-name:var(--font-playfair)] mb-2">{spice.name}</CardTitle>
-                  <CardDescription className="text-sm text-muted-foreground mb-3">{spice.description}</CardDescription>
-                  <div className="mb-3">
-                    <span className="text-sm font-medium text-accent font-[family-name:var(--font-dancing)]">
-                      Flavor: {spice.flavor}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-2xl font-bold text-primary">{spice.price}</span>
-                    <div className="flex items-center">
-                      <Star className="w-4 h-4 fill-secondary text-secondary mr-1" />
-                      <span className="text-sm font-medium">{spice.rating}</span>
-                    </div>
-                  </div>
-                  <Button className="w-full hover:scale-105 transition-all duration-300">
-                    <ShoppingCart className="w-4 h-4 mr-2" />
-                    Add to Cart
-                  </Button>
-                </CardContent>
               </Card>
             ))
             )}
@@ -595,7 +717,16 @@ export default function SpiceBazaarHome() {
                 color: "from-brown-600 to-gray-700"
               }
             ].map((category, index) => (
-              <Card key={index} className="group hover:shadow-xl transition-all duration-500 hover:-translate-y-2 border-border/50 relative overflow-hidden">
+              <Card 
+                key={index} 
+                className="group hover:shadow-xl transition-all duration-500 hover:-translate-y-2 border-border/50 relative overflow-hidden"
+                style={{
+                  animationDelay: `${index * 100}ms`,
+                  opacity: isSpiceSectionVisible ? 1 : 0,
+                  transform: isSpiceSectionVisible ? 'translateY(0)' : 'translateY(20px)',
+                  transition: `all 0.6s ease ${index * 100}ms`
+                }}
+              >
                 <div className={`absolute inset-0 bg-gradient-to-br ${category.color} opacity-10 group-hover:opacity-20 transition-opacity duration-500`}></div>
                 <CardContent className="p-8 relative z-10">
                   <div className="text-4xl mb-4">{category.icon}</div>
@@ -617,9 +748,9 @@ export default function SpiceBazaarHome() {
       </section>
 
       {/* Featured Collections */}
-      <section className="py-20">
+      <section ref={collectionsSectionRef} className="py-20 bg-gradient-to-r from-primary/5 via-secondary/5 to-accent/5">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
+          <div className={`text-center mb-16 transition-all duration-1000 ${isCollectionsSectionVisible && hasInitialized ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
             <h3 className="text-4xl font-bold font-[family-name:var(--font-playfair)] text-foreground mb-4">
               Curated Collections
             </h3>
@@ -628,61 +759,185 @@ export default function SpiceBazaarHome() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className={`grid grid-cols-1 md:grid-cols-2 gap-8 transition-all duration-1000 ${isCollectionsSectionVisible && hasInitialized ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
             {[
               {
                 title: "Moroccan Magic",
                 description: "Complete your tagine with our signature Moroccan blend",
-                image: "/moroccan-spice-blend-ras-el-hanout.png",
                 spices: ["Ras el Hanout", "Cinnamon", "Ginger", "Turmeric"],
-                price: "$34.99"
+                price: "$34.99",
+                icon: "🏺",
+                color: "from-orange-500 to-red-500",
+                benefits: ["Authentic flavor", "Perfect balance", "Traditional blend"]
               },
               {
                 title: "Indian Feast",
                 description: "Essential spices for authentic Indian cuisine",
-                image: "/green-cardamom-pods.png",
                 spices: ["Cardamom", "Cumin", "Coriander", "Saffron"],
-                price: "$42.99"
+                price: "$42.99",
+                icon: "🕉️",
+                color: "from-yellow-500 to-orange-500",
+                benefits: ["Rich aromas", "Complex flavors", "Heritage blend"]
               }
             ].map((collection, index) => (
-              <Card key={index} className="group hover:shadow-xl transition-all duration-500 hover:-translate-y-2 border-border/50 relative overflow-hidden">
-                <div className="relative h-64 overflow-hidden rounded-t-lg">
-                  <img
-                    src={collection.image}
-                    alt={collection.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                  <div className="absolute bottom-4 left-4 right-4">
-                    <h4 className="text-2xl font-bold text-white font-[family-name:var(--font-playfair)] mb-2">
+              <Card 
+                key={index} 
+                className="group hover:shadow-2xl transition-all duration-600 hover:-translate-y-3 border-border/50 relative overflow-hidden bg-gradient-to-br from-background to-card"
+                style={{
+                  animationDelay: `${index * 200}ms`,
+                  opacity: isCollectionsSectionVisible ? 1 : 0,
+                  transform: isCollectionsSectionVisible ? 'translateY(0)' : 'translateY(20px)',
+                  transition: `all 0.6s ease ${index * 200}ms`
+                }}
+              >
+                <CardHeader className="p-6 pb-4">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center space-x-3">
+                      <div className={`w-16 h-16 bg-gradient-to-br ${collection.color} rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
+                        <span className="text-3xl">{collection.icon}</span>
+                      </div>
+                      <div>
+                        <h4 className="text-2xl font-bold font-[family-name:var(--font-playfair)] text-foreground group-hover:text-primary transition-colors duration-300">
                       {collection.title}
                     </h4>
-                    <p className="text-white/90 text-sm mb-3">{collection.description}</p>
-                    <div className="flex flex-wrap gap-2 mb-3">
+                        <p className="text-muted-foreground text-sm leading-relaxed">
+                          {collection.description}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="mb-4">
+                    <h5 className="font-medium text-foreground mb-2 text-sm uppercase tracking-wide">
+                      Included Spices:
+                    </h5>
+                    <div className="flex flex-wrap gap-2">
                       {collection.spices.map((spice, spiceIndex) => (
-                        <Badge key={spiceIndex} variant="secondary" className="text-xs">
-                          {spice}
+                        <Badge 
+                          key={spiceIndex} 
+                          variant="secondary" 
+                          className="text-xs hover:scale-110 hover:bg-secondary/80 transition-all duration-200 cursor-pointer group-hover:bg-secondary/60"
+                        >
+                          ✨ {spice}
                         </Badge>
                       ))}
                     </div>
+                  </div>
+                </CardHeader>
+                
+                <CardContent className="p-6 pt-0">
+                  <div className="mb-4 p-3 bg-muted/30 rounded-lg border border-border/50 group-hover:bg-muted/50 transition-colors duration-300">
+                    <h5 className="font-semibold text-foreground mb-3 text-sm uppercase tracking-wide">
+                      Collection Benefits:
+                    </h5>
+                    <ul className="space-y-2 text-sm text-muted-foreground">
+                      {collection.benefits.map((benefit, benefitIndex) => (
+                        <li key={benefitIndex} className="flex items-center group/item hover:translate-x-1 transition-transform duration-200">
+                          <span className="w-2 h-2 bg-primary rounded-full mr-3 flex-shrink-0 group-hover/item:scale-150 transition-transform duration-200"></span>
+                          {benefit}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  
                     <div className="flex items-center justify-between">
-                      <span className="text-2xl font-bold text-white">{collection.price}</span>
-                      <Button size="sm" className="bg-primary hover:bg-primary/90">
+                    <span className="text-2xl font-bold text-primary group-hover:scale-110 transition-transform duration-300">
+                      {collection.price}
+                    </span>
+                    <div className="flex items-center space-x-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300 hover:scale-105"
+                      >
+                        <Heart className="w-4 h-4 mr-2" />
+                        Wishlist
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        className="bg-primary hover:bg-primary/90 group-hover:scale-105 transition-all duration-300"
+                      >
                         View Collection
                       </Button>
+                    </div>
+                  </div>
+                </CardContent>
+                
+                {/* Interactive hover overlay */}
+                <div
+                  className={`absolute inset-0 bg-gradient-to-br from-primary/95 via-secondary/95 to-accent/95 backdrop-blur-sm transition-all duration-500 flex items-center justify-center p-6 ${
+                    hoveredSpice === index ? "opacity-100" : "opacity-0 pointer-events-none"
+                  }`}
+                >
+                  <div className="text-white text-center space-y-4">
+                    <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <span className="text-3xl">{collection.icon}</span>
+                    </div>
+                    <h4 className="text-xl font-bold font-[family-name:var(--font-playfair)] mb-2">
+                      {collection.title}
+                    </h4>
+                    <p className="text-sm leading-relaxed opacity-90 mb-4">
+                      {collection.description}
+                    </p>
+                    <div className="space-y-2">
+                      <p className="text-xs font-semibold text-white/80 uppercase tracking-wide">
+                        Perfect for: <span className="text-white font-semibold">Authentic cooking</span>
+                      </p>
+                      <p className="text-xs font-semibold text-white/80 uppercase tracking-wide">
+                        Value: <span className="text-white font-semibold">Save 15% vs individual</span>
+                      </p>
+                    </div>
+                    <div className="pt-3 border-t border-white/20">
+                      <p className="text-xs text-white/70">
+                        Includes: <span className="text-white font-semibold">{collection.spices.length} premium spices</span>
+                      </p>
                     </div>
                   </div>
                 </div>
               </Card>
             ))}
           </div>
+          
+          {/* Collection Categories */}
+          <div className="mt-16">
+            <h4 className="text-2xl font-bold font-[family-name:var(--font-playfair)] text-foreground mb-8 text-center">
+              Explore More Collections
+            </h4>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[
+                { name: "Starter Kits", icon: "🎁", count: "8 kits", color: "from-blue-500 to-indigo-500" },
+                { name: "Chef's Choice", icon: "👨‍🍳", count: "12 collections", color: "from-purple-500 to-pink-500" },
+                { name: "Seasonal", icon: "🍂", count: "6 collections", color: "from-green-500 to-emerald-500" },
+                { name: "Limited Edition", icon: "⭐", count: "4 collections", color: "from-yellow-500 to-orange-500" }
+              ].map((category, index) => (
+                <div 
+                  key={index} 
+                  className="group cursor-pointer"
+                  style={{
+                    animationDelay: `${index * 100}ms`,
+                    opacity: isCollectionsSectionVisible ? 1 : 0,
+                    transform: isCollectionsSectionVisible ? 'translateY(0)' : 'translateY(20px)',
+                    transition: `all 0.6s ease ${index * 100}ms`
+                  }}
+                >
+                  <div className={`bg-gradient-to-br ${category.color} p-4 rounded-lg text-center hover:scale-105 transition-all duration-300`}>
+                    <div className="text-3xl mb-2 group-hover:scale-110 transition-transform duration-300">
+                      {category.icon}
+                    </div>
+                    <h5 className="font-semibold text-white mb-1">{category.name}</h5>
+                    <p className="text-white/80 text-sm">{category.count}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* Recipe Ideas */}
-      <section id="recipes" className="py-20">
+      {/* Culinary Inspirations */}
+      <section ref={recipeSectionRef} id="recipes" className="py-20 bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
+          <div className={`text-center mb-16 transition-all duration-1000 ${isRecipeSectionVisible && hasInitialized ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
             <h3 className="text-4xl font-bold font-[family-name:var(--font-playfair)] text-foreground mb-4">
               Culinary Inspirations
             </h3>
@@ -691,83 +946,184 @@ export default function SpiceBazaarHome() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className={`grid grid-cols-1 md:grid-cols-3 gap-8 transition-all duration-1000 ${isRecipeSectionVisible && hasInitialized ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
             {recipes.map((recipe, index) => (
-                          <div key={index} className="perspective-2000">
-              <div
-                className={`relative w-full h-96 transition-transform duration-800 transform-style-preserve-3d cursor-pointer recipe-card-3d ${
-                  flippedRecipes.has(index) ? "rotate-y-180" : ""
-                }`}
-                onClick={() => toggleRecipeFlip(index)}
-              >
-                  {/* Front of card */}
-                  <Card className="absolute inset-0 backface-hidden group hover:shadow-xl transition-all duration-300 overflow-hidden">
-                    <div className="relative h-full">
-                      <LazyImage
-                        src={recipe.image || "/placeholder.svg"}
-                        alt={recipe.title}
-                        className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                      <div className="absolute bottom-4 left-4 right-4">
-                        <h4 className="text-2xl font-bold text-white font-[family-name:var(--font-playfair)] mb-2">
+              <div key={index} className="group">
+                <Card 
+                  className="h-full hover:shadow-2xl transition-all duration-600 hover:-translate-y-3 border-border/50 relative overflow-hidden bg-gradient-to-br from-background to-card"
+                  style={{
+                    animationDelay: `${index * 150}ms`,
+                    opacity: isRecipeSectionVisible ? 1 : 0,
+                    transform: isRecipeSectionVisible ? 'translateY(0)' : 'translateY(20px)',
+                    transition: `all 0.6s ease ${index * 150}ms`
+                  }}
+                >
+                  <CardHeader className="p-6 pb-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-12 h-12 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                          <span className="text-2xl">
+                            {recipe.title.includes('Tagine') ? '🥘' : recipe.title.includes('Biryani') ? '🍚' : '🍽️'}
+                          </span>
+                        </div>
+                        <div>
+                          <h4 className="text-xl font-bold font-[family-name:var(--font-playfair)] text-foreground group-hover:text-primary transition-colors duration-300">
                           {recipe.title}
                         </h4>
-                        <div className="flex items-center text-white/80 text-sm space-x-4">
-                          <span>⏱️ {recipe.time}</span>
-                          <span>📊 {recipe.difficulty}</span>
+                          <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                            <span className="flex items-center">
+                              <span className="mr-1">⏱️</span>
+                              {recipe.time}
+                            </span>
+                            <span className="flex items-center">
+                              <span className="mr-1">📊</span>
+                              {recipe.difficulty}
+                            </span>
                         </div>
                       </div>
-                      <div className="absolute top-4 right-4 bg-white/20 backdrop-blur-sm rounded-full p-2">
-                        <Info className="w-4 h-4 text-white" />
                       </div>
                     </div>
-                    <CardContent className="p-6">
+                    
+                    <p className="text-sm text-muted-foreground leading-relaxed italic mb-4">
+                      {recipe.description}
+                    </p>
+                    
                       <div className="mb-4">
-                        <h5 className="font-medium text-foreground mb-2">Key Spices:</h5>
+                      <h5 className="font-medium text-foreground mb-2 text-sm uppercase tracking-wide">
+                        Key Spices:
+                      </h5>
                         <div className="flex flex-wrap gap-2">
                           {recipe.spices.map((spice, spiceIndex) => (
-                            <Badge key={spiceIndex} variant="secondary" className="text-xs">
-                              {spice}
+                          <Badge 
+                            key={spiceIndex} 
+                            variant="secondary" 
+                            className="text-xs hover:scale-110 hover:bg-secondary/80 transition-all duration-200 cursor-pointer group-hover:bg-secondary/60"
+                          >
+                            ✨ {spice}
                             </Badge>
                           ))}
                         </div>
                       </div>
+                  </CardHeader>
+                  
+                  <CardContent className="p-6 pt-0">
+                    <div className="mb-4 p-3 bg-muted/30 rounded-lg border border-border/50 group-hover:bg-muted/50 transition-colors duration-300">
+                      <h5 className="font-semibold text-foreground mb-3 text-sm uppercase tracking-wide">
+                        Essential Ingredients:
+                      </h5>
+                      <ul className="space-y-2 text-sm text-muted-foreground">
+                        {recipe.ingredients.slice(0, 4).map((ingredient, ingredientIndex) => (
+                          <li key={ingredientIndex} className="flex items-center group/item hover:translate-x-1 transition-transform duration-200">
+                            <span className="w-2 h-2 bg-primary rounded-full mr-3 flex-shrink-0 group-hover/item:scale-150 transition-transform duration-200"></span>
+                            {ingredient}
+                          </li>
+                        ))}
+                        {recipe.ingredients.length > 4 && (
+                          <li className="text-xs text-primary font-medium cursor-pointer hover:underline">
+                            +{recipe.ingredients.length - 4} more ingredients
+                          </li>
+                        )}
+                      </ul>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
                       <Button
                         variant="outline"
-                        className="w-full bg-transparent hover:scale-105 transition-all duration-300"
+                        size="sm" 
+                        className="group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300 hover:scale-105"
+                        onClick={() => toggleRecipeFlip(index)}
                       >
-                        Click to see ingredients
+                        <BookOpen className="w-4 h-4 mr-2" />
+                        View Recipe
                       </Button>
+                      
+                      <div className="flex items-center space-x-2">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="group-hover:bg-secondary/20 group-hover:text-secondary transition-all duration-300 hover:scale-105"
+                        >
+                          <Heart className="w-4 h-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="group-hover:bg-accent/20 group-hover:text-accent transition-all duration-300 hover:scale-105"
+                        >
+                          <Share className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
                     </CardContent>
-                  </Card>
-
-                  {/* Back of card */}
-                  <Card className="absolute inset-0 backface-hidden rotate-y-180 bg-gradient-to-br from-primary/5 to-secondary/5">
-                    <CardContent className="p-6 h-full flex flex-col">
-                      <h4 className="text-2xl font-bold font-[family-name:var(--font-playfair)] text-foreground mb-4">
+                  
+                  {/* Interactive hover overlay */}
+                  <div
+                    className={`absolute inset-0 bg-gradient-to-br from-primary/95 via-secondary/95 to-accent/95 backdrop-blur-sm transition-all duration-500 flex items-center justify-center p-6 ${
+                      hoveredSpice === index ? "opacity-100" : "opacity-0 pointer-events-none"
+                    }`}
+                  >
+                    <div className="text-white text-center space-y-4">
+                      <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <BookOpen className="w-8 h-8 text-white" />
+                      </div>
+                      <h4 className="text-xl font-bold font-[family-name:var(--font-playfair)] mb-2">
                         {recipe.title}
                       </h4>
-                      <p className="text-sm text-muted-foreground mb-4 italic">{recipe.description}</p>
-                      <div className="flex-1">
-                        <h5 className="font-semibold text-foreground mb-3">Ingredients:</h5>
-                        <ul className="space-y-3 text-sm text-muted-foreground">
-                          {recipe.ingredients.map((ingredient, ingredientIndex) => (
-                            <li key={ingredientIndex} className="ingredient-item">
-                              <span className="w-2 h-2 bg-primary rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                              {ingredient}
-                            </li>
-                          ))}
-                        </ul>
+                      <p className="text-sm leading-relaxed opacity-90 mb-4">
+                        {recipe.description}
+                      </p>
+                      <div className="space-y-2">
+                        <p className="text-xs font-semibold text-white/80 uppercase tracking-wide">
+                          Cooking Time: {recipe.time}
+                        </p>
+                        <p className="text-xs font-semibold text-white/80 uppercase tracking-wide">
+                          Difficulty: {recipe.difficulty}
+                        </p>
                       </div>
-                      <Button className="w-full mt-4 hover:scale-105 transition-all duration-300">
-                        View Full Recipe
-                      </Button>
-                    </CardContent>
+                      <div className="pt-3 border-t border-white/20">
+                        <p className="text-xs text-white/70">
+                          Perfect for: <span className="text-white font-semibold">Family dinners, Special occasions</span>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                   </Card>
+              </div>
+            ))}
+          </div>
+          
+          {/* Interactive Recipe Categories */}
+          <div className="mt-16">
+            <h4 className="text-2xl font-bold font-[family-name:var(--font-playfair)] text-foreground mb-8 text-center">
+              Explore Recipe Categories
+            </h4>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[
+                { name: "Quick & Easy", icon: "⚡", count: "25 recipes", color: "from-green-500 to-emerald-500" },
+                { name: "Traditional", icon: "🏺", count: "40 recipes", color: "from-orange-500 to-red-500" },
+                { name: "Vegetarian", icon: "🥬", count: "30 recipes", color: "from-green-600 to-teal-600" },
+                { name: "Spice-Forward", icon: "🌶️", count: "35 recipes", color: "from-red-600 to-pink-600" }
+              ].map((category, index) => (
+                <div 
+                  key={index} 
+                  className="group cursor-pointer"
+                  style={{
+                    animationDelay: `${index * 100}ms`,
+                    opacity: isRecipeSectionVisible ? 1 : 0,
+                    transform: isRecipeSectionVisible ? 'translateY(0)' : 'translateY(20px)',
+                    transition: `all 0.6s ease ${index * 100}ms`
+                  }}
+                >
+                  <div className={`bg-gradient-to-br ${category.color} p-4 rounded-lg text-center hover:scale-105 transition-all duration-300`}>
+                    <div className="text-3xl mb-2 group-hover:scale-110 transition-transform duration-300">
+                      {category.icon}
+                    </div>
+                    <h5 className="font-semibold text-white mb-1">{category.name}</h5>
+                    <p className="text-white/80 text-sm">{category.count}</p>
                 </div>
               </div>
             ))}
+            </div>
           </div>
         </div>
       </section>
@@ -939,6 +1295,35 @@ export default function SpiceBazaarHome() {
           </div>
         </div>
       </section>
+
+      {/* Floating Action Button */}
+      <div className="fixed bottom-6 right-6 z-50">
+        <div className="flex flex-col space-y-3">
+          <Button
+            size="icon"
+            className="w-12 h-12 bg-primary hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 group"
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          >
+            <span className="group-hover:rotate-180 transition-transform duration-300">↑</span>
+          </Button>
+          
+          <Button
+            size="icon"
+            variant="outline"
+            className="w-12 h-12 bg-background/80 backdrop-blur-sm border-border/50 hover:bg-background shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 group"
+          >
+            <Heart className="w-5 h-5 group-hover:text-red-500 transition-colors duration-300" />
+          </Button>
+          
+          <Button
+            size="icon"
+            variant="outline"
+            className="w-12 h-12 bg-background/80 backdrop-blur-sm border-border/50 hover:bg-background shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 group"
+          >
+            <ShoppingCart className="w-5 h-5 group-hover:text-primary transition-colors duration-300" />
+          </Button>
+        </div>
+      </div>
 
       {/* Footer */}
       <footer className="bg-card border-t border-border py-12">

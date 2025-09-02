@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # Development service
   spice-bazaar-dev:
@@ -15,6 +13,8 @@ services:
     environment:
       - NODE_ENV=development
       - NEXT_TELEMETRY_DISABLED=1
+      - WATCHPACK_POLLING=true
+      - CHOKIDAR_USEPOLLING=true
     command: pnpm dev
     profiles:
       - dev
@@ -29,6 +29,7 @@ services:
     environment:
       - NODE_ENV=production
       - NEXT_TELEMETRY_DISABLED=1
+      - NODE_OPTIONS=--max-old-space-size=4096
     restart: unless-stopped
     profiles:
       - prod
@@ -41,6 +42,7 @@ services:
     environment:
       - NODE_ENV=production
       - NEXT_TELEMETRY_DISABLED=1
+      - NODE_OPTIONS=--max-old-space-size=4096
     restart: unless-stopped
     profiles:
       - nginx

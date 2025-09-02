@@ -1,5 +1,4 @@
 # Development override configuration
-version: '3.8'
 
 services:
   spice-bazaar-dev:

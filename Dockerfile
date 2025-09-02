@@ -1,5 +1,5 @@
 # Multi-stage build for Next.js application
-FROM node:18-alpine AS base
+FROM node:20-alpine AS base
 
 # Install dependencies only when needed
 FROM base AS deps
@@ -9,7 +9,7 @@ WORKDIR /app
 
 # Install dependencies based on the preferred package manager
 COPY package.json pnpm-lock.yaml* ./
-RUN npm install -g pnpm && pnpm install --frozen-lockfile
+RUN npm install -g pnpm && pnpm install --frozen-lockfile --prefer-offline
 
 # Rebuild the source code only when needed
 FROM base AS builder
@@ -23,14 +23,17 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED 1
 
 RUN npm install -g pnpm && pnpm build
+# Optimize for production
+RUN pnpm prune --prod
 
 # Production image, copy all the files and run next
 FROM base AS runner
 WORKDIR /app
 
 ENV NODE_ENV production
-# Uncomment the following line in case you want to disable telemetry during runtime.
 ENV NEXT_TELEMETRY_DISABLED 1
+# Performance optimizations
+ENV NODE_OPTIONS="--max-old-space-size=4096"
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
