@@ -1,0 +1,458 @@
+Here’s a clean, well-structured list of essential APIs used in modern full-stack applications — beyond just payments.
+ I grouped them into core categories so you can pick what fits your project architecture (maps, auth, analytics, communication, AI, open data, KYC, etc.).
+
+✅ 1. Authentication & User Identity APIs
+These handle login, OAuth, MFA, user management.
+🔐 Popular APIs
+Auth0
+
+
+Firebase Authentication
+
+
+Clerk
+
+
+Supabase Auth
+
+
+Okta
+
+
+AWS Cognito
+
+
+Magic.link (passwordless)
+
+
+Stytch (MFA + advanced auth)
+
+
+Keycloak (self-hosted)
+
+
+
+✅ 2. Payment & Billing APIs
+Beyond Stripe.
+💳 Payment Gateways
+Stripe
+
+
+Paystack
+
+
+Flutterwave
+
+
+Paypal
+
+
+Braintree
+
+
+Square
+
+
+Razorpay
+
+
+Adyen
+
+
+Mollie
+
+
+Coinbase Commerce (crypto)
+
+
+Ramp Network (crypto on/off ramp)
+
+
+🧾 Subscription / Billing-Specific APIs
+Stripe Billing
+
+
+Chargebee
+
+
+Recurly
+
+
+Paddle
+
+
+LemonSqueezy
+
+
+
+✅ 3. Maps, Geolocation & Places APIs
+Used for location-based apps, logistics, events, ride-sharing, deliveries, etc.
+🗺️ Mapping & Geospatial
+Google Maps Platform
+
+
+OpenStreetMap
+
+
+Mapbox
+
+
+Here Maps
+
+
+TomTom
+
+
+Esri ArcGIS
+
+
+OpenLayers
+
+
+Leaflet.js (client library, free maps)
+
+
+📍 Geocoding / Address Validation
+PositionStack
+
+
+OpenCage
+
+
+Geocodio
+
+
+Nominatim (OSM)
+
+
+
+✅ 4. Messaging, Notifications & Communication APIs
+For email, SMS, in-app chat, voice.
+✉️ Email
+SendGrid
+
+
+Mailgun
+
+
+Postmark
+
+
+Amazon SES
+
+
+Brevo (formerly SendinBlue)
+
+
+📱 SMS / Voice
+Twilio
+
+
+Vonage (Nexmo)
+
+
+Termii (Africa-focused)
+
+
+Plivo
+
+
+💬 Real-time Chat / Support
+LiveChat
+
+
+Sendbird
+
+
+Stream Chat
+
+
+CometChat
+
+
+Twilio Conversations
+
+
+
+✅ 5. Cloud Storage, Files & Media APIs
+For uploads, images, videos, processing, CDN.
+☁️ File Storage & Media
+Cloudinary (image/video transformation)
+
+
+Uploadcare
+
+
+Firebase Storage
+
+
+AWS S3
+
+
+Supabase Storage
+
+
+ImageKit
+
+
+Mux (video streaming)
+
+
+Vimeo API
+
+
+
+✅ 6. Analytics, Monitoring & Logging APIs
+For understanding user behavior, app stability, errors.
+📊 Analytics
+Google Analytics / GA4
+
+
+Plausible
+
+
+PostHog
+
+
+Mixpanel
+
+
+Amplitude
+
+
+🛠️ Monitoring & Logging
+Sentry
+
+
+New Relic
+
+
+Datadog
+
+
+LogRocket
+
+
+Elastic APM
+
+
+Grafana Cloud
+
+
+
+✅ 7. AI & Machine Learning APIs
+For LLMs, embeddings, search, CV, transcription.
+🤖 AI Models & Embeddings
+OpenAI API
+
+
+Google Gemini
+
+
+Anthropic Claude
+
+
+Cohere
+
+
+HuggingFace Inference
+
+
+🔍 Vector & Search
+Pinecone
+
+
+Weaviate
+
+
+Typesense
+
+
+ElasticSearch
+
+
+🎙️ Media AI (Speech, Vision)
+AssemblyAI
+
+
+Rev AI
+
+
+Speechmatics
+
+
+OpenAI Audio APIs
+
+
+AWS Rekognition
+
+
+
+✅ 8. Maps, Weather, Environment, Open Data APIs
+Useful for dashboards, sustainability, logistics, research.
+☁️ Weather & Climate
+OpenWeatherMap
+
+
+WeatherAPI
+
+
+ClimaCell / Tomorrow.io
+
+
+NOAA (US)
+
+
+Meteorologisk institutt APIs (global)
+
+
+🌍 Open Data (Government / Public Data)
+World Bank API
+
+
+UNData
+
+
+OECD API
+
+
+EU Open Data Portal
+
+
+Data.gov (USA)
+
+
+National Bureau of Statistics (NBS Nigeria – partial open data)
+
+
+🌱 Sustainability / ESG / Energy
+ESG Book API
+
+
+Carbon Interface
+
+
+ElectricityMaps
+
+
+WRI (climate datasets)
+
+
+
+✅ 9. KYC, Identity Verification & Compliance APIs
+For fintech, marketplaces, user verification.
+🪪 KYC / Verification
+Onfido
+
+
+Trulioo
+
+
+Veriff
+
+
+Persona
+
+
+Smile ID (Africa)
+
+
+Seamfix (BVN, NIN verification, Nigeria)
+
+
+🏦 Banking / Open Banking / Fintech APIs
+Monnify
+
+
+Mono (Nigeria)
+
+
+OnePipe
+
+
+Okra
+
+
+Plaid
+
+
+TrueLayer
+
+
+Teller API
+
+
+
+✅ 10. DevOps, Deployment & Infrastructure APIs
+For CI/CD, deployments, serverless.
+⚙️ CI/CD & Hosting
+Vercel Deploy Hooks
+
+
+Netlify API
+
+
+GitHub Actions API
+
+
+GitLab Pipelines API
+
+
+🔥 Serverless & Compute
+AWS Lambda
+
+
+Cloudflare Workers
+
+
+Google Cloud Run
+
+
+Supabase Edge Functions
+
+
+
+✅ 11. e-Commerce, Product, Inventory APIs
+If building marketplaces, shops, logistics.
+🛒 Commerce APIs
+Shopify Storefront API
+
+
+WooCommerce REST API
+
+
+BigCommerce API
+
+
+Commerce.js
+
+
+Medusa.js
+
+
+🚚 Logistics, Tracking
+Shippo
+
+
+EasyPost
+
+
+DHL API
+
+
+FedEx API
+
+
+UPS API
+
+
+Sendy (Africa)
+
+
+
+🎯 If you want, I can also generate:
+✔️ A full architecture map of how these APIs integrate into a modular full-stack system
+ ✔️ A curated list specifically for your Fintech + SaaS + Full-stack ecosystem
+ ✔️ API choices for your upcoming premium portfolio
+Just tell me which category you want deep architecture for.
+

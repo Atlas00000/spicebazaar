@@ -4,6 +4,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.dev
+    container_name: spice-bazaar-dev
     ports:
       - "3000:3000"
     volumes:
@@ -15,7 +16,13 @@ services:
       - NEXT_TELEMETRY_DISABLED=1
       - WATCHPACK_POLLING=true
       - CHOKIDAR_USEPOLLING=true
-    command: pnpm dev
+    command: pnpm dev --hostname 0.0.0.0
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     profiles:
       - dev
 
@@ -24,6 +31,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    container_name: spice-bazaar-prod
     ports:
       - "3000:3000"
     environment:
@@ -31,6 +39,12 @@ services:
       - NEXT_TELEMETRY_DISABLED=1
       - NODE_OPTIONS=--max-old-space-size=4096
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     profiles:
       - prod
 
@@ -39,16 +53,26 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    container_name: spice-bazaar-app
     environment:
       - NODE_ENV=production
       - NEXT_TELEMETRY_DISABLED=1
       - NODE_OPTIONS=--max-old-space-size=4096
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - spice-bazaar-network
     profiles:
       - nginx
 
   nginx:
     image: nginx:alpine
+    container_name: spice-bazaar-nginx
     ports:
       - "80:80"
       - "443:443"
@@ -57,9 +81,18 @@ services:
       - ./ssl:/etc/nginx/ssl:ro
     depends_on:
       - spice-bazaar-nginx
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - spice-bazaar-network
     profiles:
       - nginx
 
 networks:
-  default:
+  spice-bazaar-network:
+    driver: bridge
     name: spice-bazaar-network

@@ -5,6 +5,7 @@ import { GeistMono } from "geist/font/mono"
 import { Playfair_Display, Dancing_Script } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { Suspense } from "react"
+import { LoadingScreenProvider } from "@/components/loading"
 import "./globals.css"
 
 const playfairDisplay = Playfair_Display({
@@ -32,11 +33,14 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`font-sans ${GeistSans.variable} ${GeistMono.variable} ${playfairDisplay.variable} ${dancingScript.variable}`}
+        suppressHydrationWarning
       >
-        <Suspense fallback={null}>{children}</Suspense>
+        <LoadingScreenProvider minDisplayTime={2500}>
+          <Suspense fallback={null}>{children}</Suspense>
+        </LoadingScreenProvider>
         <Analytics />
       </body>
     </html>

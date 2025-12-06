@@ -128,9 +128,26 @@
 
 /* Adding custom CSS for 3D flip animations and interactive effects */
 @layer utilities {
+  /* ========================================
+     ENHANCED DESIGN SYSTEM UTILITIES
+     Following UI Philosophy Report standards
+     ======================================== */
+
   /* 3D Perspective and Transform Utilities */
   .perspective-1000 {
     perspective: 1000px;
+  }
+
+  .perspective-1200 {
+    perspective: 1200px;
+  }
+
+  .perspective-1500 {
+    perspective: 1500px;
+  }
+
+  .perspective-2000 {
+    perspective: 2000px;
   }
 
   .transform-style-preserve-3d {
@@ -143,6 +160,23 @@
 
   .rotate-y-180 {
     transform: rotateY(180deg);
+  }
+
+  /* GPU Acceleration Hints */
+  .gpu-accelerate {
+    transform: translateZ(0);
+    will-change: transform;
+    backface-visibility: hidden;
+    perspective: 1000px;
+  }
+  
+  .gpu-accelerated {
+    transform: translateZ(0);
+    will-change: transform;
+  }
+
+  .gpu-accelerated-opacity {
+    will-change: opacity, transform;
   }
 
   /* Enhanced recipe card 3D effects */
@@ -445,6 +479,272 @@
     }
     50% {
       background-position: 100% 50%;
+    }
+  }
+
+  /* ========================================
+     GLASSMORPHISM UTILITIES
+     ======================================== */
+  .glass {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(12px) saturate(180%);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+  }
+
+  .glass-dark {
+    background: rgba(0, 0, 0, 0.08);
+    backdrop-filter: blur(12px) saturate(180%);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+    border: 1px solid rgba(0, 0, 0, 0.18);
+  }
+
+  .glass-strong {
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(20px) saturate(200%);
+    -webkit-backdrop-filter: blur(20px) saturate(200%);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+  }
+
+  /* ========================================
+     MAGNETIC & INTERACTIVE EFFECTS
+     ======================================== */
+  .magnetic {
+    transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .magnetic:hover {
+    transform: scale(1.05);
+  }
+
+  /* ========================================
+     SCROLL SNAP UTILITIES
+     ======================================== */
+  .scroll-snap-container {
+    scroll-snap-type: y mandatory;
+    overflow-y: scroll;
+    height: 100vh;
+  }
+
+  .scroll-snap-item {
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+
+  /* ========================================
+     CUSTOM SCROLLBAR
+     ======================================== */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: var(--color-muted);
+    border-radius: 4px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: var(--color-primary);
+    border-radius: 4px;
+    transition: background 0.2s;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: var(--color-accent);
+  }
+
+  /* ========================================
+     TEXT EFFECTS
+     ======================================== */
+  .text-shadow-sm {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+
+  .text-shadow-md {
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  }
+
+  .text-shadow-lg {
+    text-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  }
+
+  .text-glow {
+    text-shadow: 0 0 10px currentColor,
+                 0 0 20px currentColor,
+                 0 0 30px currentColor;
+  }
+
+  /* ========================================
+     ELEVATION SHADOWS
+     ======================================== */
+  .elevation-0 {
+    box-shadow: none;
+  }
+
+  .elevation-1 {
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+  }
+
+  .elevation-2 {
+    box-shadow: 0 3px 6px rgba(0,0,0,0.15), 0 2px 4px rgba(0,0,0,0.12);
+  }
+
+  .elevation-3 {
+    box-shadow: 0 10px 20px rgba(0,0,0,0.15), 0 3px 6px rgba(0,0,0,0.10);
+  }
+
+  .elevation-4 {
+    box-shadow: 0 15px 25px rgba(0,0,0,0.15), 0 5px 10px rgba(0,0,0,0.05);
+  }
+
+  .elevation-5 {
+    box-shadow: 0 20px 40px rgba(0,0,0,0.20), 0 10px 15px rgba(0,0,0,0.15);
+  }
+
+  /* ========================================
+     COLORED GLOWS
+     ======================================== */
+  .glow-primary {
+    box-shadow: 0 0 20px rgba(198, 93, 50, 0.3);
+  }
+
+  .glow-secondary {
+    box-shadow: 0 0 20px rgba(251, 191, 36, 0.3);
+  }
+
+  .glow-accent {
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+  }
+
+  /* ========================================
+     LOADING STATES
+     ======================================== */
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      var(--color-muted) 0%,
+      var(--color-border) 50%,
+      var(--color-muted) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite linear;
+    border-radius: 4px;
+  }
+
+  .skeleton-text {
+    height: 1em;
+    margin-bottom: 0.5em;
+    border-radius: 4px;
+  }
+
+  .skeleton-circle {
+    border-radius: 50%;
+  }
+
+  /* ========================================
+     PERFORMANCE OPTIMIZATIONS
+     ======================================== */
+  /* ========================================
+     REDUCED MOTION ACCESSIBILITY
+     ======================================== */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+    
+    .animate-float,
+    .animate-spice-shimmer,
+    .animate-gentle-pulse,
+    .animate-bounce,
+    .animate-spin,
+    .animate-pulse {
+      animation: none !important;
+    }
+
+    /* Disable parallax effects */
+    [data-parallax],
+    .parallax {
+      transform: none !important;
+    }
+
+    /* Disable hover animations */
+    *:hover {
+      transform: none !important;
+      transition: none !important;
+    }
+  }
+
+  /* ========================================
+     SCROLL PERFORMANCE OPTIMIZATIONS
+     ======================================== */
+  /* Smooth scrolling with performance */
+  html {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Optimize scroll containers */
+  .scroll-container {
+    will-change: scroll-position;
+    transform: translateZ(0);
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Passive scroll listeners hint */
+  [data-scroll-optimized] {
+    touch-action: pan-y;
+  }
+
+  /* Low-end device optimizations */
+  @media (max-width: 768px) and (max-resolution: 2dppx) {
+    .gpu-accelerated {
+      will-change: auto;
+    }
+    
+    .elevation-3,
+    .elevation-4,
+    .elevation-5 {
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .glass,
+    .glass-dark,
+    .glass-strong {
+      backdrop-filter: blur(8px) saturate(150%);
+      -webkit-backdrop-filter: blur(8px) saturate(150%);
+    }
+  }
+
+  /* ========================================
+     PRINT STYLES
+     ======================================== */
+  @media print {
+    .no-print,
+    .glass,
+    .glow-primary,
+    .glow-secondary,
+    .glow-accent {
+      display: none !important;
+    }
+    
+    * {
+      animation: none !important;
+      transition: none !important;
     }
   }
 }

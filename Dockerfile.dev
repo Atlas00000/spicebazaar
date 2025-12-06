@@ -2,20 +2,20 @@
 FROM node:20-alpine
 
 # Install dependencies
-RUN apk add --no-cache libc6-compat
+RUN apk add --no-cache libc6-compat git
 
 WORKDIR /app
 
 # Install pnpm globally
-RUN npm install -g pnpm
+RUN npm install -g pnpm@latest
 
-# Copy package files
+# Copy package files first for better caching
 COPY package.json pnpm-lock.yaml* ./
 
 # Install dependencies
 RUN pnpm install
 
-# Copy source code
+# Copy source code (will be overridden by volume mount in dev)
 COPY . .
 
 # Expose port
@@ -24,6 +24,8 @@ EXPOSE 3000
 # Set environment variables
 ENV NODE_ENV=development
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV WATCHPACK_POLLING=true
+ENV CHOKIDAR_USEPOLLING=true
 
-# Start development server
-CMD ["pnpm", "dev"]
+# Start development server with host binding
+CMD ["pnpm", "dev", "--hostname", "0.0.0.0"]

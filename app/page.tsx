@@ -1,1426 +1,695 @@
+/**
+ * Enhanced Spice Bazaar Homepage
+ * Using new FAANG-level component system
+ */
+
 "use client"
 
-import { useState, useEffect, useMemo, useRef, useCallback } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Star, ShoppingCart, Heart, Sparkles, Globe, BookOpen, Info, Search, Filter, Menu, X, Share } from "lucide-react"
+import { useState } from 'react'
+import { motion } from 'framer-motion'
+import { ShoppingCart, BookOpen, Sparkles, Heart } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
-// Enhanced spice particle component with performance optimization
-const SpiceParticle = ({ particle, isVisible }: { particle: any; isVisible: boolean }) => (
-  <div
-    className="absolute rounded-full animate-float pointer-events-none"
-    style={{
-      left: `${particle.x}%`,
-      top: `${particle.y}%`,
-      width: `${particle.size}px`,
-      height: `${particle.size}px`,
-      backgroundColor: particle.color,
-      animationDelay: `${particle.delay}s`,
-      animationDuration: `${particle.speed + 4}s`,
-      filter: 'blur(0.5px)',
-      opacity: isVisible ? particle.opacity : 0,
-      transition: 'opacity 0.5s ease'
-    }}
-  />
-)
+// New component imports
+import { FluidNavigation } from '@/components/navigation'
+import { FluidHeroSection, FluidSection, GlossyCard } from '@/components/hero'
+import { InteractiveStatCard, CircularStat, StatWithSparkline, StatsGrid } from '@/components/stats'
+import { ProductsSection } from '@/components/products'
+import { CategoriesSection } from '@/components/categories'
+import { CollectionsSection } from '@/components/collections'
+import { RecipesSection } from '@/components/recipes'
+import { StoriesSection } from '@/components/stories'
+import { TestimonialsSection } from '@/components/testimonials'
+import { NewsletterSection } from '@/components/newsletter'
+import { FABCluster } from '@/components/fab'
+import { FeatureGrid } from '@/components/layout/FeatureGrid'
+import { FluidFooter } from '@/components/footer'
+import { NotificationProvider, useNotifications } from '@/components/layout/NotificationSystem'
+import { SearchOverlay, useSearchOverlay } from '@/components/layout/SearchOverlay'
+import { ScrollProgressIndicator } from '@/components/effects/ScrollProgressIndicator'
+import { ScrollReveal } from '@/components/animated/ScrollReveal'
+import { AnimatedButton } from '@/components/animated/AnimatedButton'
+import { AnimatedBadge } from '@/components/animated/AnimatedBadge'
 
-// Lazy loading image component
-const LazyImage = ({ src, alt, className, ...props }: any) => {
-  const [isLoaded, setIsLoaded] = useState(false)
-  const [isInView, setIsInView] = useState(false)
-  const imgRef = useRef<HTMLImageElement>(null)
+// Sample data - Featured spices for hero carousel
+const heroProducts = [
+  {
+    id: '1',
+    name: 'Saffron Threads',
+    tagline: 'The world\'s most precious spice - Golden threads of pure luxury',
+    image: '/saffron-threads-in-glass-jar.png',
+    color: '#fbbf24',
+    price: 24.99,
+  },
+  {
+    id: '2',
+    name: 'Ras el Hanout',
+    tagline: 'Moroccan magic in every pinch - A symphony of 12 exotic spices',
+    image: '/moroccan-spice-blend-ras-el-hanout.png',
+    color: '#c65d32',
+    price: 18.99,
+  },
+  {
+    id: '3',
+    name: 'Green Cardamom',
+    tagline: 'Queen of spices from Kerala - Sweet, floral perfection',
+    image: '/green-cardamom-pods.png',
+    color: '#10b981',
+    price: 16.99,
+  },
+  {
+    id: '4',
+    name: 'Harissa Paste',
+    tagline: 'North African fire - Bold heat with smoky depth',
+    image: '/harissa-paste-in-jar.png',
+    color: '#ef4444',
+    price: 12.99,
+  },
+]
 
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsInView(true)
-          observer.disconnect()
-        }
-      },
-      { threshold: 0.1 }
-    )
+// Product grid data with enhanced details
+const featuredSpices = [
+  {
+    id: '1',
+    name: 'Saffron Threads',
+    origin: 'Kashmir, India',
+    price: 24.99,
+    originalPrice: 29.99,
+    image: '/saffron-threads-in-glass-jar.png',
+    rating: 5,
+    reviews: 128,
+    badge: 'Premium',
+    inStock: true,
+    color: '#fbbf24',
+    description: 'The world\'s most precious spice, saffron threads are hand-harvested from the crocus flower, requiring over 75,000 flowers to produce just one pound. Our premium saffron comes from the high-altitude fields of Kashmir, where the unique terroir produces threads with exceptional color, aroma, and flavor. Each thread is carefully selected for its deep crimson color and golden tips, ensuring maximum potency. When steeped, these threads release their distinctive golden hue and complex flavor profile—honey-like sweetness with subtle floral and earthy notes. A little goes a long way, making this one of the most cost-effective ways to add luxury to your dishes.',
+  },
+  {
+    id: '2',
+    name: 'Ras el Hanout',
+    origin: 'Morocco',
+    price: 18.99,
+    image: '/moroccan-spice-blend-ras-el-hanout.png',
+    rating: 5,
+    reviews: 96,
+    badge: 'Best Seller',
+    inStock: true,
+    color: '#c65d32',
+    description: 'Experience the authentic taste of Morocco with our traditional Ras el Hanout, a complex blend of 12+ aromatic spices that has been perfected over generations. This "head of the shop" blend includes cinnamon, ginger, turmeric, cardamom, nutmeg, allspice, cloves, black pepper, coriander, cumin, and more, each spice carefully balanced to create a harmonious flavor profile. Our blend is created using a traditional recipe from the souks of Marrakech, where master spice merchants have refined this combination for centuries. Perfect for tagines, couscous, and grilled meats, this blend adds warmth, depth, and an unmistakable North African character to any dish.',
+  },
+  {
+    id: '3',
+    name: 'Green Cardamom',
+    origin: 'Kerala, India',
+    price: 16.99,
+    image: '/green-cardamom-pods.png',
+    rating: 5,
+    reviews: 84,
+    inStock: true,
+    color: '#10b981',
+    description: 'Discover why cardamom is called the "Queen of Spices" with our premium green cardamom pods from the spice gardens of Kerala. These aromatic pods contain tiny black seeds that release an intoxicating fragrance when crushed—a complex blend of sweet, floral, and citrusy notes with hints of eucalyptus and mint. Cardamom is essential to Indian, Middle Eastern, and Scandinavian cuisines, adding its distinctive flavor to everything from chai and coffee to curries and desserts. Our cardamom pods are harvested at peak ripeness and carefully dried to preserve their essential oils, ensuring maximum flavor and aroma. Each pod is plump and green, indicating freshness and quality.',
+  },
+  {
+    id: '4',
+    name: 'Harissa Paste',
+    origin: 'Tunisia',
+    price: 12.99,
+    image: '/harissa-paste-in-jar.png',
+    rating: 4,
+    reviews: 67,
+    badge: 'Hot',
+    inStock: true,
+    color: '#ef4444',
+    description: 'Ignite your dishes with our authentic harissa, a fiery North African chili paste that brings both heat and incredible depth of flavor. Made from sun-dried red chilies, garlic, caraway seeds, coriander, and olive oil, our harissa is slow-roasted to develop its characteristic smoky, complex flavor. This isn\'t just heat—it\'s a carefully balanced paste where the smokiness of the chilies, the earthiness of the spices, and the richness of the olive oil create a flavor profile that is both bold and nuanced. Perfect for tagines, couscous, grilled meats, and as a condiment, harissa adds that distinctive North African character that makes dishes truly memorable. A little goes a long way, so start with a small amount and adjust to your heat preference.',
+  },
+]
 
-    if (imgRef.current) {
-      observer.disconnect()
-    }
+const features = [
+  {
+    icon: <Sparkles className="w-6 h-6" />,
+    title: 'Premium Quality',
+    description: 'Hand-selected spices from the finest markets across Morocco and India.',
+    link: { label: 'Learn More', href: '#quality' },
+  },
+  {
+    icon: <ShoppingCart className="w-6 h-6" />,
+    title: 'Fast Delivery',
+    description: 'Get your authentic spices delivered fresh to your doorstep in 2-3 days.',
+    link: { label: 'Shipping Info', href: '#shipping' },
+  },
+  {
+    icon: <BookOpen className="w-6 h-6" />,
+    title: '500+ Recipes',
+    description: 'Explore our collection of authentic recipes from master chefs worldwide.',
+    link: { label: 'View Recipes', href: '#recipes' },
+  },
+]
 
-    return () => observer.disconnect()
-  }, [])
+// Collections data
+const featuredCollections = [
+  {
+    id: 'moroccan-magic',
+    name: 'Moroccan Magic',
+    description: 'Complete your tagine with our signature Moroccan blend collection, featuring the essential spices that define North African cuisine. This carefully curated set includes our premium Ras el Hanout—a complex blend of 12+ spices including cinnamon, ginger, turmeric, and cardamom—along with individual spices that allow you to customize your dishes. Perfect for tagines, couscous, and other Moroccan classics, this collection comes with a detailed recipe guide that teaches you the art of Moroccan spice blending. Each spice is sourced directly from Moroccan markets, ensuring authentic flavors that transport you to the bustling souks of Marrakech.',
+    icon: '🏺',
+    spices: ['Ras el Hanout', 'Cinnamon', 'Ginger', 'Turmeric'],
+    price: 34.99,
+    originalPrice: 42.99,
+    savings: 'Save $8 vs buying separately',
+    gradient: '#c65d32, #f97316',
+    benefits: ['Authentic flavor profile', 'Perfect balance', 'Traditional blend', 'Recipe guide included'],
+    featured: true,
+  },
+  {
+    id: 'indian-feast',
+    name: 'Indian Feast',
+    description: 'Master the art of Indian cooking with this essential spice collection that includes everything you need to create authentic dishes from across the subcontinent. This comprehensive set features premium cardamom pods from Kerala, aromatic cumin seeds, fragrant coriander, and the precious saffron threads from Kashmir. Each spice is carefully selected for its quality and authenticity, ensuring your curries, biryanis, and masalas have that distinctive Indian character. The collection includes detailed spice pairing guides and traditional recipes that showcase how these spices work together to create the complex, layered flavors that define Indian cuisine. Perfect for both beginners and experienced cooks looking to elevate their Indian cooking.',
+    icon: '🕉️',
+    spices: ['Cardamom', 'Cumin', 'Coriander', 'Saffron'],
+    price: 42.99,
+    originalPrice: 52.99,
+    savings: 'Save $10 vs buying separately',
+    gradient: '#fbbf24, #f59e0b',
+    benefits: ['Rich aromas', 'Complex flavors', 'Heritage blend', 'Cooking tips included'],
+    featured: false,
+  },
+]
 
-    return (
-    <img
-      ref={imgRef}
-      src={isInView ? src : "/placeholder.svg"}
-      alt={alt}
-      className={`${className} ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
-      onLoad={() => setIsLoaded(true)}
-      loading="lazy"
-      {...props}
-    />
-  )
-}
+// Recipes data
+const featuredRecipes = [
+  {
+    id: 'moroccan-tagine',
+    title: 'Moroccan Tagine',
+    description: 'Experience the magic of slow-cooked North African cuisine with this traditional tagine recipe that showcases the art of spice blending. This iconic dish features tender, fall-off-the-bone meat that has been marinated in a complex blend of Moroccan spices, then slow-cooked with dried fruits, vegetables, and aromatic herbs. The result is a dish that is at once sweet, savory, and deeply aromatic—a perfect harmony of flavors that has been perfected over centuries. The slow cooking process allows the spices to fully infuse the meat, creating layers of flavor that develop and deepen with each hour. Serve this impressive dish at your next gathering and watch as your guests are transported to the vibrant markets of Morocco.',
+    image: '/moroccan-tagine-with-vegetables-and-spices.png',
+    time: '2 hours',
+    difficulty: 'Medium' as const,
+    servings: 6,
+    spices: ['Ras el Hanout', 'Cinnamon', 'Ginger'],
+    ingredients: ['2 lbs lamb shoulder, cubed', '2 tbsp Ras el Hanout', '1 cinnamon stick', '2 onions, sliced', '1 cup dried apricots', '2 cups chicken broth', 'Fresh cilantro'],
+    color: '#c65d32',
+  },
+  {
+    id: 'indian-biryani',
+    title: 'Indian Biryani',
+    description: 'Master the art of biryani with this authentic recipe that creates a fragrant, layered rice dish featuring perfectly spiced meat and aromatic saffron. This is a dish that requires patience and technique, but the results are absolutely spectacular. Each layer is carefully spiced and cooked separately before being combined, creating a dish where every grain of rice is infused with flavor, and every bite reveals new layers of complexity. The saffron adds its distinctive golden color and floral aroma, while the cardamom and bay leaves provide the essential fragrance that makes biryani so distinctive. This recipe includes detailed instructions for achieving that perfect texture—fluffy, separate grains of rice that are fully cooked but not mushy, and tender, flavorful meat that has been marinated and cooked to perfection.',
+    image: '/indian-biryani-with-saffron-and-spices.png',
+    time: '1.5 hours',
+    difficulty: 'Hard' as const,
+    servings: 8,
+    spices: ['Saffron', 'Cardamom', 'Bay Leaves'],
+    ingredients: ['2 cups basmati rice', '1 lb chicken, marinated', 'Pinch of saffron', '6 green cardamom pods', '3 bay leaves', 'Fried onions', 'Mint & cilantro'],
+    color: '#fbbf24',
+  },
+  {
+    id: 'tunisian-couscous',
+    title: 'Tunisian Couscous',
+    description: 'Discover the bright, fresh flavors of Tunisian cuisine with this light and fluffy couscous recipe that pairs perfectly with spicy harissa and seasonal vegetables. This dish is a celebration of simplicity and flavor, where the delicate texture of the couscous provides the perfect canvas for the bold, spicy harissa and the fresh, vibrant vegetables. The harissa adds a complex heat that builds gradually, while the vegetables provide sweetness and texture. This is a dish that comes together quickly but delivers big on flavor, making it perfect for weeknight dinners or impressive enough for special occasions. The recipe includes tips for achieving that perfect fluffy texture and for balancing the heat of the harissa to your preference.',
+    image: '/tunisian-couscous-with-harissa.png',
+    time: '45 mins',
+    difficulty: 'Easy' as const,
+    servings: 4,
+    spices: ['Harissa', 'Cumin', 'Coriander'],
+    ingredients: ['2 cups couscous', '3 tbsp harissa paste', 'Mixed vegetables', '1 tsp ground cumin', '1 tsp coriander seeds', 'Olive oil', 'Fresh herbs'],
+    color: '#ef4444',
+  },
+]
 
-export default function SpiceBazaarHome() {
-  const [animateSpices, setAnimateSpices] = useState(false)
-  const [hoveredSpice, setHoveredSpice] = useState<number | null>(null)
-  const [flippedRecipes, setFlippedRecipes] = useState<Set<number>>(new Set())
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
-  const [isLoading, setIsLoading] = useState(true)
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [isHeroVisible, setIsHeroVisible] = useState(false)
-  const [isSpiceSectionVisible, setIsSpiceSectionVisible] = useState(false)
-  const [isRecipeSectionVisible, setIsRecipeSectionVisible] = useState(false)
-  const [isCollectionsSectionVisible, setIsCollectionsSectionVisible] = useState(false)
-  const [hasInitialized, setHasInitialized] = useState(false)
-  const heroRef = useRef<HTMLElement>(null)
-  const spiceSectionRef = useRef<HTMLElement>(null)
-  const recipeSectionRef = useRef<HTMLElement>(null)
-  const collectionsSectionRef = useRef<HTMLElement>(null)
+// Stories data
+const culturalStories = [
+  {
+    id: 'moroccan-tradition',
+    title: 'Moroccan Tradition',
+    subtitle: 'The Art of Spice Blending',
+    description: 'In the bustling souks of Marrakech, master spice merchants have perfected their craft over generations, creating blends that are as much art as they are science. Each blend tells a story of family secrets passed down through the ages, ancient recipes that have stood the test of time, and the vibrant colors that define North African cuisine. These artisans understand the delicate balance of flavors, knowing exactly when to add a pinch of warmth, a hint of sweetness, or a burst of heat. When you use our Moroccan spices, you\'re not just adding flavor to your dishes—you\'re connecting with a tradition that spans centuries, bringing the authentic taste of the Maghreb to your kitchen.',
+    image: '/traditional-spice-merchant-in-moroccan-bazaar-with.png',
+    location: 'Marrakech, Morocco',
+    date: 'Ancient Tradition',
+    icon: '🏺',
+    color: '#c65d32',
+    gradient: '#c65d32, #f97316',
+  },
+  {
+    id: 'indian-heritage',
+    title: 'Indian Heritage',
+    subtitle: 'From Kerala to Kashmir',
+    description: 'The spice gardens of Kerala and the saffron fields of Kashmir represent centuries of meticulous cultivation and ancient trade routes that once connected the East to the West. These regions have fundamentally shaped global cuisine, introducing flavors that have become essential to kitchens around the world. The aromatic treasures from these lands—from the black pepper that once drove exploration to the saffron that graces the finest dishes—continue to enchant chefs and home cooks alike. When you choose spices from these regions, you\'re experiencing flavors that have been refined over millennia, each one carrying the essence of its terroir and the care of generations of farmers who have dedicated their lives to perfecting these precious crops.',
+    image: '/indian-biryani-with-saffron-and-spices.png',
+    location: 'Kerala & Kashmir, India',
+    date: '5000+ Years',
+    icon: '🕉️',
+    color: '#fbbf24',
+    gradient: '#fbbf24, #f59e0b',
+  },
+  {
+    id: 'sustainable-sourcing',
+    title: 'Sustainable Sourcing',
+    subtitle: 'Supporting Communities',
+    description: 'We work directly with family farms and cooperatives around the world, ensuring fair trade practices and sustainable farming methods that protect both the environment and the communities that depend on spice cultivation. Every purchase you make supports traditional agriculture and local communities that are preserving ancient cultivation techniques passed down through generations. By choosing Spice Bazaar, you\'re not just buying spices—you\'re investing in the future of sustainable agriculture, supporting farmers who use time-honored methods that produce superior quality while protecting biodiversity. Together, we\'re building a more sustainable and equitable spice trade that honors both tradition and innovation.',
+    image: '/moroccan-spice-market-bazaar-colorful-spices.png',
+    location: 'Worldwide',
+    date: 'Modern Practice',
+    icon: '🌱',
+    color: '#10b981',
+    gradient: '#10b981, #059669',
+  },
+]
 
-  // Enhanced particle system with mobile optimization and performance throttling
-  const spiceParticles = useMemo(() => {
-    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
-    const particleCount = isMobile ? 6 : 12 // Reduced for better performance
-    
-    return Array.from({ length: particleCount }, (_, i) => ({
-      id: i,
-      x: Math.random() * 100,
-      y: Math.random() * 100,
-      size: isMobile ? Math.random() * 3 + 2 : Math.random() * 5 + 3,
-      speed: Math.random() * 1.5 + 0.8, // Slightly slower for better performance
-      color: ['#c65d32', '#fbbf24', '#ef4444'][Math.floor(Math.random() * 3)],
-      delay: Math.random() * 3,
-      opacity: Math.random() * 0.5 + 0.3
-    }))
-  }, [])
+// Testimonials data
+const customerTestimonials = [
+  {
+    id: 'testimonial-1',
+    name: 'Chef Maria Rodriguez',
+    role: 'Executive Chef',
+    company: 'La Cocina',
+    avatar: '/placeholder-user.jpg',
+    rating: 5,
+    comment: 'The saffron threads are absolutely exceptional. They\'ve transformed my paella and risotto dishes completely. The quality is unmatched—deep golden color, intense aroma, and that unmistakable flavor that only comes from the finest saffron. My customers can taste the difference immediately, and I\'ve received countless compliments on dishes that now have that authentic Spanish character. This is the real deal, and I won\'t use anything else in my kitchen.',
+    verified: true,
+    color: '#c65d32',
+  },
+  {
+    id: 'testimonial-2',
+    name: 'David Chen',
+    role: 'Home Cook & Food Blogger',
+    company: 'Spice Journey Blog',
+    avatar: '/placeholder-user.jpg',
+    rating: 5,
+    comment: 'I\'ve been using their Ras el Hanout for months now, and it has completely revolutionized my Moroccan cooking. The depth of flavor it adds to my tagines is incredible—you can taste every single spice in the blend, from the warm cinnamon to the earthy cumin, all perfectly balanced. It\'s authentic, aromatic, and transports you straight to the souks of Marrakech. My family and friends are always asking for my tagine recipe, and I tell them the secret is this amazing spice blend. Absolutely worth every penny!',
+    verified: true,
+    color: '#fbbf24',
+  },
+  {
+    id: 'testimonial-3',
+    name: 'Sarah Johnson',
+    role: 'Restaurant Owner',
+    company: 'Spice & Soul',
+    avatar: '/placeholder-user.jpg',
+    rating: 5,
+    comment: 'Our customers can\'t get enough of the cardamom pods from Spice Bazaar. They\'re the secret ingredient in our signature chai blend that keeps people coming back. The pods are incredibly fresh, bursting with that distinctive floral fragrance, and perfectly packaged to maintain their essential oils. We\'ve tried other suppliers, but nothing compares to the quality and consistency we get from Spice Bazaar. Our chai sales have increased by 40% since we started using their cardamom, and customers specifically ask for "the chai with the amazing cardamom." It\'s become our signature!',
+    verified: true,
+    color: '#10b981',
+  },
+]
 
-  useEffect(() => {
-    const timer = setTimeout(() => setAnimateSpices(true), 500)
-    const loadingTimer = setTimeout(() => setIsLoading(false), 1000)
-    const initTimer = setTimeout(() => setHasInitialized(true), 1500)
-    
-    // Mouse movement tracking for particle interaction with throttling
-    let mouseMoveTimeout: NodeJS.Timeout
-    const handleMouseMove = (e: MouseEvent) => {
-      if (mouseMoveTimeout) return
-      
-      mouseMoveTimeout = setTimeout(() => {
-        setMousePosition({ x: e.clientX, y: e.clientY })
-        mouseMoveTimeout = null as any
-      }, 16) // ~60fps throttling
-    }
-    
-    window.addEventListener('mousemove', handleMouseMove)
-    
-    return () => {
-      clearTimeout(timer)
-      clearTimeout(loadingTimer)
-      clearTimeout(initTimer)
-      window.removeEventListener('mousemove', handleMouseMove)
-    }
-  }, [])
+// Categories data
+const spiceCategories = [
+  {
+    id: '1',
+    name: 'Warming Spices',
+    description: 'Embrace the cozy comfort of warming spices that add rich depth and aromatic warmth to your dishes. Our collection features premium cinnamon from Sri Lanka, fragrant nutmeg from Indonesia, and pungent cloves from Madagascar. These spices are perfect for winter comfort foods, spiced beverages, and baked goods, creating that inviting warmth that makes every meal feel like a celebration. Each spice is carefully selected for its intensity and flavor profile, ensuring your dishes have that perfect balance of warmth and complexity.',
+    icon: '🔥',
+    count: '12 varieties',
+    gradient: '#ef4444, #f97316',
+    featured: true,
+  },
+  {
+    id: '2',
+    name: 'Aromatic Herbs',
+    description: 'Discover the bright, vibrant flavors of our extensive herb collection, featuring both fresh and dried varieties from around the world. From the earthy depth of Mediterranean oregano to the citrusy brightness of Thai basil, our aromatic herbs bring freshness and complexity to every dish. Perfect for salads, marinades, sauces, and garnishes, these herbs are harvested at peak freshness and carefully preserved to maintain their essential oils and vibrant colors. Transform simple ingredients into extraordinary meals with the power of fresh, aromatic herbs.',
+    icon: '🌿',
+    count: '18 varieties',
+    gradient: '#10b981, #059669',
+  },
+  {
+    id: '3',
+    name: 'Exotic Blends',
+    description: 'Journey through the world\'s most celebrated spice blends, each one a carefully crafted masterpiece of flavor. Our exotic blends collection includes everything from the complex 12-spice Moroccan Ras el Hanout to the fiery Ethiopian Berbere, the aromatic Indian Garam Masala, and the fragrant Chinese Five-Spice. Each blend is created using traditional recipes that have been perfected over centuries, combining spices in perfect harmony to create flavors that are greater than the sum of their parts. These blends are the secret weapons of master chefs and home cooks alike.',
+    icon: '🌍',
+    count: '8 blends',
+    gradient: '#8b5cf6, #6366f1',
+  },
+  {
+    id: '4',
+    name: 'Hot & Spicy',
+    description: 'Ignite your taste buds with our collection of chilies and peppers that bring bold, fiery heat to your culinary creations. From the smoky depth of chipotle to the fruity heat of habanero, the complex warmth of Aleppo pepper to the intense fire of ghost peppers, our hot and spicy collection offers heat levels for every palate. Each pepper is carefully selected for its unique flavor profile, not just its heat, ensuring that your dishes have complexity alongside the fire. Whether you\'re crafting a subtle warmth or seeking intense heat, find the perfect pepper to elevate your dishes.',
+    icon: '🌶️',
+    count: '15 varieties',
+    gradient: '#dc2626, #ea580c',
+  },
+  {
+    id: '5',
+    name: 'Sweet Spices',
+    description: 'Indulge in the delicate, aromatic world of sweet spices that transform desserts and sweet dishes into extraordinary experiences. Our collection features premium vanilla beans from Madagascar, fragrant cardamom pods from India, golden saffron threads from Kashmir, and exotic star anise from China. These spices add layers of complexity to sweet creations, from classic vanilla custards to spiced chai, saffron-infused rice puddings to cardamom-scented pastries. Each spice is chosen for its purity and intensity, ensuring that even a small amount creates a profound impact on your sweet creations.',
+    icon: '🍯',
+    count: '10 varieties',
+    gradient: '#fbbf24, #f59e0b',
+  },
+  {
+    id: '6',
+    name: 'Umami Boosters',
+    description: 'Unlock the deep, savory fifth taste with our collection of umami-boosting spices and powders. From earthy mushroom powders that add meaty depth to vegetarian dishes, to fermented spice pastes that bring complex savory notes, these ingredients are the secret to creating dishes with incredible depth and richness. Our umami boosters include shiitake mushroom powder, miso paste, nutritional yeast, and other fermented treasures that add that satisfying, mouth-watering quality to soups, stews, sauces, and marinades. Discover how these ingredients can transform your cooking with their profound savory character.',
+    icon: '🍄',
+    count: '6 varieties',
+    gradient: '#78716c, #57534e',
+  },
+]
 
-  // Intersection observers for section animations
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    
-    // Check if IntersectionObserver is supported
-    if (!('IntersectionObserver' in window)) {
-      // Fallback: show all sections immediately
-      setIsHeroVisible(true)
-      setIsSpiceSectionVisible(true)
-      setIsRecipeSectionVisible(true)
-      setIsCollectionsSectionVisible(true)
-      return
-    }
+function HomePageContent() {
+  const { showNotification } = useNotifications()
+  const search = useSearchOverlay()
+  const [wishlistCount, setWishlistCount] = useState(0)
+  const [cartCount, setCartCount] = useState(0)
 
-    const heroObserver = new IntersectionObserver(
-      ([entry]) => {
-        setIsHeroVisible(entry.isIntersecting)
-      },
-      { threshold: 0.1, rootMargin: '50px' }
-    )
-
-    const spiceObserver = new IntersectionObserver(
-      ([entry]) => {
-        setIsSpiceSectionVisible(entry.isIntersecting)
-      },
-      { threshold: 0.1, rootMargin: '50px' }
-    )
-
-    const recipeObserver = new IntersectionObserver(
-      ([entry]) => {
-        setIsRecipeSectionVisible(entry.isIntersecting)
-      },
-      { threshold: 0.1, rootMargin: '50px' }
-    )
-
-    const collectionsObserver = new IntersectionObserver(
-      ([entry]) => {
-        setIsCollectionsSectionVisible(entry.isIntersecting)
-      },
-      { threshold: 0.1, rootMargin: '50px' }
-    )
-
-    try {
-      if (heroRef.current) {
-        heroObserver.observe(heroRef.current)
-      }
-      if (spiceSectionRef.current) {
-        spiceObserver.observe(spiceSectionRef.current)
-      }
-      if (recipeSectionRef.current) {
-        recipeObserver.observe(recipeSectionRef.current)
-      }
-      if (collectionsSectionRef.current) {
-        collectionsObserver.observe(collectionsSectionRef.current)
-      }
-    } catch (error) {
-      console.warn('Intersection observer setup failed:', error)
-    }
-
-    return () => {
-      heroObserver.disconnect()
-      spiceObserver.disconnect()
-      recipeObserver.disconnect()
-      collectionsObserver.disconnect()
-    }
-  }, [])
-
-  const toggleRecipeFlip = (index: number) => {
-    setFlippedRecipes((prev) => {
-      const newSet = new Set(prev)
-      if (newSet.has(index)) {
-        newSet.delete(index)
-      } else {
-        newSet.add(index)
-      }
-      return newSet
+  const handleAddToCart = (id: string) => {
+    setCartCount((prev) => prev + 1)
+    showNotification({
+      type: 'success',
+      title: 'Added to cart!',
+      message: 'Item has been added to your shopping cart.',
     })
   }
 
-  const featuredSpices = [
-    {
-      name: "Saffron Threads",
-      origin: "Kashmir, India",
-      price: "$24.99",
-      rating: 4.9,
-      image: "/saffron-threads-in-glass-jar.png",
-      description: "The world's most precious spice",
-      flavor: "Floral, honey-like",
-      details:
-        "Hand-picked from Crocus flowers at dawn. Each thread contains intense flavor and beautiful golden color. Used in Persian rice, Spanish paella, and Indian sweets.",
-      uses: ["Biryani", "Paella", "Bouillabaisse", "Kulfi"],
-    },
-    {
-      name: "Ras el Hanout",
-      origin: "Morocco",
-      price: "$18.99",
-      rating: 4.8,
-      image: "/moroccan-spice-blend-ras-el-hanout.png",
-      description: "Traditional Moroccan spice blend",
-      flavor: "Complex, warm, aromatic",
-      details:
-        "A masterful blend of 12+ spices including rose petals, cinnamon, and cardamom. Each family has their secret recipe passed down through generations.",
-      uses: ["Tagines", "Couscous", "Grilled meats", "Vegetable stews"],
-    },
-    {
-      name: "Cardamom Pods",
-      origin: "Kerala, India",
-      price: "$16.99",
-      rating: 4.7,
-      image: "/green-cardamom-pods.png",
-      description: "Queen of spices from India",
-      flavor: "Sweet, floral, citrusy",
-      details:
-        "Green cardamom pods from the Western Ghats. Best used whole or freshly ground. Essential in chai, desserts, and savory dishes.",
-      uses: ["Chai tea", "Biryani", "Desserts", "Coffee"],
-    },
-    {
-      name: "Harissa Paste",
-      origin: "Tunisia",
-      price: "$12.99",
-      rating: 4.6,
-      image: "/harissa-paste-in-jar.png",
-      description: "Fiery North African chili paste",
-      flavor: "Hot, smoky, garlicky",
-      details:
-        "Made from dried chilies, garlic, and aromatic spices. A staple condiment that adds depth and heat to any dish. Traditionally made in stone mortars.",
-      uses: ["Couscous", "Grilled meats", "Stews", "Marinades"],
-    },
-  ]
+  const handleAddToWishlist = (id: string) => {
+    setWishlistCount((prev) => prev + 1)
+    showNotification({
+      type: 'info',
+      title: 'Added to wishlist',
+      message: 'Item saved to your wishlist.',
+    })
+  }
 
-  const recipes = [
-    {
-      title: "Moroccan Tagine",
-      time: "2 hours",
-      difficulty: "Medium",
-      image: "/moroccan-tagine-with-vegetables-and-spices.png",
-      spices: ["Ras el Hanout", "Cinnamon", "Ginger"],
-      ingredients: [
-        "2 lbs lamb shoulder, cubed",
-        "2 tbsp Ras el Hanout",
-        "1 cinnamon stick",
-        "2 onions, sliced",
-        "1 cup dried apricots",
-        "2 cups chicken broth",
-        "Fresh cilantro",
-      ],
-      description: "A slow-cooked North African stew bursting with aromatic spices and tender meat.",
-    },
-    {
-      title: "Indian Biryani",
-      time: "1.5 hours",
-      difficulty: "Hard",
-      image: "/indian-biryani-with-saffron-and-spices.png",
-      spices: ["Saffron", "Cardamom", "Bay Leaves"],
-      ingredients: [
-        "2 cups basmati rice",
-        "1 lb chicken, marinated",
-        "Pinch of saffron",
-        "6 green cardamom pods",
-        "3 bay leaves",
-        "Fried onions",
-        "Mint & cilantro",
-      ],
-      description: "Fragrant layered rice dish with perfectly spiced meat and aromatic saffron.",
-    },
-    {
-      title: "Tunisian Couscous",
-      time: "45 mins",
-      difficulty: "Easy",
-      image: "/tunisian-couscous-with-harissa.png",
-      spices: ["Harissa", "Cumin", "Coriander"],
-      ingredients: [
-        "2 cups couscous",
-        "3 tbsp harissa paste",
-        "Mixed vegetables",
-        "1 tsp ground cumin",
-        "1 tsp coriander seeds",
-        "Olive oil",
-        "Fresh herbs",
-      ],
-      description: "Light and fluffy semolina with spicy harissa and seasonal vegetables.",
-    },
-  ]
+  const handleSearch = async (query: string) => {
+    // Simulate search
+    return featuredSpices
+      .filter((spice) =>
+        spice.name.toLowerCase().includes(query.toLowerCase())
+      )
+      .map((spice) => ({
+        id: spice.id,
+        title: spice.name,
+        category: 'Spices',
+        url: `/product/${spice.id}`,
+        icon: <Sparkles className="w-5 h-5" />,
+      }))
+  }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50 transition-all duration-300">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <Sparkles className="h-8 w-8 text-primary animate-pulse" />
-            <h1 className="text-2xl font-bold font-[family-name:var(--font-playfair)] text-primary">Spice Bazaar</h1>
-          </div>
-          <nav className="hidden md:flex items-center space-x-8">
-            <a
-              href="#spices"
-              className="text-foreground hover:text-primary transition-all duration-300 hover:scale-105"
-            >
-              Spices
-            </a>
-            <a
-              href="#recipes"
-              className="text-foreground hover:text-primary transition-all duration-300 hover:scale-105"
-            >
-              Recipes
-            </a>
-            <a
-              href="#stories"
-              className="text-foreground hover:text-primary transition-all duration-300 hover:scale-105"
-            >
-              Stories
-            </a>
-            <a href="#about" className="text-foreground hover:text-primary transition-all duration-300 hover:scale-105">
-              About
-            </a>
-          </nav>
-          
-          {/* Mobile Menu Button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="md:hidden hover:scale-110 transition-transform duration-200"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          >
-            <Menu className="h-5 w-5" />
-          </Button>
-          <div className="flex items-center space-x-4">
-            <Button variant="ghost" size="icon" className="hover:scale-110 transition-transform duration-200">
-              <Heart className="h-5 w-5" />
-            </Button>
-            <Button variant="ghost" size="icon" className="hover:scale-110 transition-transform duration-200">
-              <ShoppingCart className="h-5 w-5" />
-            </Button>
-          </div>
-        </div>
-      </header>
+    <>
+      {/* Scroll Progress */}
+      <ScrollProgressIndicator color="bg-primary" height={3} />
 
-      {/* Mobile Menu Overlay */}
-      {isMobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 transition-all duration-300">
-          <div className="absolute top-0 right-0 w-64 h-full bg-card border-l border-border shadow-2xl transform transition-transform duration-300">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold font-[family-name:var(--font-playfair)] text-primary">Menu</h2>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="hover:scale-110 transition-transform duration-200"
-                >
-                  <X className="h-5 w-5" />
-                </Button>
-              </div>
-              <nav className="space-y-4">
-                <a
-                  href="#spices"
-                  className="block py-3 px-4 text-foreground hover:text-primary transition-all duration-300 hover:bg-muted rounded-lg"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  Spices
-                </a>
-                <a
-                  href="#recipes"
-                  className="block py-3 px-4 text-foreground hover:text-primary transition-all duration-300 hover:bg-muted rounded-lg"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  Recipes
-                </a>
-                <a
-                  href="#stories"
-                  className="block py-3 px-4 text-foreground hover:text-primary transition-all duration-300 hover:bg-muted rounded-lg"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  Stories
-                </a>
-                <a
-                  href="#about"
-                  className="block py-3 px-4 text-foreground hover:text-primary transition-all duration-300 hover:bg-muted rounded-lg"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  About
-                </a>
-              </nav>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Navigation */}
+      <FluidNavigation
+        items={[
+          { label: 'Spices', href: '#spices' },
+          { label: 'Recipes', href: '#recipes' },
+          { label: 'Stories', href: '#stories' },
+          { label: 'About', href: '#about' },
+        ]}
+        cartCount={cartCount}
+        wishlistCount={wishlistCount}
+        onSearch={search.open}
+        onCartClick={() => {
+          showNotification({
+            type: 'info',
+            title: 'Shopping Cart',
+            message: `You have ${cartCount} items`,
+          })
+        }}
+        onWishlistClick={() => {
+          showNotification({
+            type: 'info',
+            title: 'Wishlist',
+            message: `You have ${wishlistCount} saved items`,
+          })
+        }}
+      />
 
-      {/* Hero Section */}
-      <section ref={heroRef} className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-secondary/10 to-accent/10">
-        <div className="absolute inset-0 bg-[url('/moroccan-spice-market-bazaar-colorful-spices.png')] bg-cover bg-center opacity-20"></div>
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5 animate-pulse"></div>
-        <div className="relative container mx-auto px-4 py-24 text-center">
-          <div
-            className={`transition-all duration-1000 ${animateSpices ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"}`}
-          >
-            <h2 className="text-5xl md:text-7xl font-bold font-[family-name:var(--font-playfair)] text-foreground mb-6 text-balance">
-              Journey Through
-              <span className="text-primary block bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent gradient-text-enhanced">
-                Exotic Flavors
-              </span>
-            </h2>
-            <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto text-pretty">
-              Discover authentic spices from the vibrant bazaars of Morocco and India. Each spice tells a story, each
-              flavor awakens your senses.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button
-                size="lg"
-                className="text-lg px-8 py-6 hover:scale-105 transition-all duration-300 hover:shadow-lg btn-enhanced"
-              >
-                <ShoppingCart className="mr-2 h-5 w-5" />
-                Shop Spices
-              </Button>
-              <Button
-                variant="outline"
-                size="lg"
-                className="text-lg px-8 py-6 bg-transparent hover:scale-105 transition-all duration-300 hover:shadow-lg btn-enhanced"
-              >
-                <BookOpen className="mr-2 h-5 w-5" />
-                Explore Recipes
-              </Button>
-            </div>
-          </div>
-        </div>
+      {/* Search Overlay */}
+      <SearchOverlay
+        isOpen={search.isOpen}
+        onClose={search.close}
+        onSearch={handleSearch}
+        recentSearches={['Saffron', 'Cardamom', 'Harissa']}
+        trendingSearches={['Ras el Hanout', 'Turmeric', 'Cinnamon']}
+      />
 
-        {/* Enhanced Floating Spice Animation */}
-        {isHeroVisible && spiceParticles.map((particle) => (
-          <SpiceParticle key={particle.id} particle={particle} isVisible={isHeroVisible} />
-        ))}
-      </section>
+      {/* Fluid Hero Section with Product Carousel */}
+      <FluidHeroSection
+        products={heroProducts}
+        onAddToCart={handleAddToCart}
+        onAddToWishlist={handleAddToWishlist}
+      />
 
-      {/* Quick Stats */}
-      <section className="py-16 bg-card/50 border-b border-border">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            {[
-              { number: "50+", label: "Premium Spices" },
-              { number: "25+", label: "Countries" },
-              { number: "10K+", label: "Happy Customers" },
-              { number: "500+", label: "Authentic Recipes" }
-            ].map((stat, index) => (
-              <div key={index} className="group">
-                <div className="text-3xl md:text-4xl font-bold text-primary mb-2 group-hover:scale-110 transition-transform duration-300">
-                  {stat.number}
-                </div>
-                <div className="text-sm md:text-base text-muted-foreground font-medium">
-                  {stat.label}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* Stats Section - Visual Marvel */}
+      <FluidSection variant="medium" showOrbs gloss className="-mt-16">
+          <div className="container mx-auto px-4">
+          <StatsGrid columns={4} staggerDelay={150}>
+            {/* Stat 1: Spices with Circular Progress */}
+            <CircularStat
+              value={50}
+              max={100}
+              suffix="+"
+              label="Premium Spices"
+              description="Hand-selected varieties"
+              icon={<Sparkles className="w-8 h-8" />}
+              color="#c65d32"
+              showPercentage
+              trend={12}
+              trendLabel="vs last month"
+            />
 
-      {/* Featured Spices */}
-      <section ref={spiceSectionRef} id="spices" className="py-20 bg-card/30">
-        <div className="container mx-auto px-4">
-          <div className={`text-center mb-16 transition-all duration-1000 ${isSpiceSectionVisible && hasInitialized ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
-            <h3 className="text-4xl font-bold font-[family-name:var(--font-playfair)] text-foreground mb-4">
-              Premium Spice Collection
-            </h3>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto text-pretty mb-8">
-              Hand-selected from the finest spice markets across Morocco and India
-            </p>
-            
-            {/* Search and Filter Section */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center max-w-md mx-auto">
-              <div className="relative flex-1">
-                <input
-                  type="text"
-                  placeholder="Search spices..."
-                  className="w-full px-4 py-2 border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
-                />
-                <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              </div>
-              <Button variant="outline" size="sm" className="shrink-0">
-                <Filter className="w-4 h-4 mr-2" />
-                Filter
-              </Button>
-            </div>
-          </div>
-
-          <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 card-grid-enhanced transition-all duration-1000 ${isSpiceSectionVisible && hasInitialized ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
-            {isLoading ? (
-              // Loading skeleton cards
-              Array.from({ length: 4 }).map((_, index) => (
-                <Card key={`skeleton-${index}`} className="border-border/50 relative overflow-hidden">
-                  <div className="animate-pulse">
-                    <div className="w-full h-48 bg-muted rounded-t-lg"></div>
-                    <CardContent className="p-6 space-y-3">
-                      <div className="h-6 bg-muted rounded"></div>
-                      <div className="h-4 bg-muted rounded w-3/4"></div>
-                      <div className="h-4 bg-muted rounded w-1/2"></div>
-                      <div className="h-8 bg-muted rounded"></div>
-                    </CardContent>
-                  </div>
-                </Card>
-              ))
-            ) : (
-              featuredSpices.map((spice, index) => (
-                <Card
-                  key={index}
-                  className={`group hover:shadow-2xl transition-all duration-600 hover:-translate-y-3 border-border/50 relative overflow-hidden spice-card-enhanced bg-gradient-to-br from-background to-card animate-delay-${index * 100}`}
-                  onMouseEnter={() => setHoveredSpice(index)}
-                  onMouseLeave={() => setHoveredSpice(null)}
-                  style={{
-                    animationDelay: `${index * 100}ms`,
-                    opacity: isSpiceSectionVisible ? 1 : 0,
-                    transform: isSpiceSectionVisible ? 'translateY(0)' : 'translateY(20px)',
-                    transition: `all 0.6s ease ${index * 100}ms`
-                  }}
-                >
-                  <CardHeader className="p-6 pb-4">
-                    <div className="flex items-start justify-between mb-3">
-                      <Badge className="bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-all duration-300 group-hover:scale-110">
-                      <Globe className="w-3 h-3 mr-1" />
-                      {spice.origin.split(",")[1]}
-                    </Badge>
-                      <div className="flex items-center opacity-80 group-hover:opacity-100 transition-opacity duration-300">
-                        <Star className="w-4 h-4 fill-secondary text-secondary mr-1" />
-                        <span className="text-sm font-medium text-foreground">{spice.rating}</span>
-                      </div>
-                    </div>
-                    
-                    <CardTitle className="text-xl font-[family-name:var(--font-playfair)] mb-2 group-hover:text-primary transition-colors duration-300">
-                      {spice.name}
-                    </CardTitle>
-                    
-                    <CardDescription className="text-sm text-muted-foreground mb-3 leading-relaxed">
-                      {spice.description}
-                    </CardDescription>
-                    
-                    <div className="mb-3">
-                      <span className="text-sm font-medium text-accent font-[family-name:var(--font-dancing)] group-hover:text-accent/80 transition-colors duration-300">
-                        ✨ {spice.flavor}
-                      </span>
-                    </div>
-                  </CardHeader>
-                  
-                  <CardContent className="p-6 pt-0">
-                    <div className="mb-4">
-                      <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wide font-medium">
-                        Perfect for:
-                      </p>
-                      <div className="flex flex-wrap gap-2">
-                        {spice.uses.map((use, useIndex) => (
-                          <Badge 
-                            key={useIndex} 
-                            variant="secondary" 
-                            className="text-xs hover:scale-110 hover:bg-secondary/80 transition-all duration-200 cursor-pointer group-hover:bg-secondary/60"
-                          >
-                            {use}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    <div className="mb-4 p-3 bg-muted/30 rounded-lg border border-border/50 group-hover:bg-muted/50 transition-colors duration-300">
-                      <p className="text-xs text-muted-foreground mb-1 uppercase tracking-wide font-medium">
-                        Origin Story:
-                      </p>
-                      <p className="text-sm text-foreground leading-relaxed">
-                        {spice.details}
-                      </p>
-                    </div>
-                    
-                    <div className="flex items-center justify-between mb-4">
-                      <span className="text-2xl font-bold text-primary group-hover:scale-110 transition-transform duration-300">
-                        {spice.price}
-                      </span>
-                      <div className="flex items-center space-x-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300 hover:scale-105"
-                        >
-                          <Heart className="w-4 h-4 mr-1" />
-                          Wishlist
-                        </Button>
-                      </div>
-                    </div>
-                    
-                    <Button className="w-full group-hover:bg-primary/90 transition-all duration-300 hover:scale-105 hover:shadow-lg">
-                      <ShoppingCart className="w-4 h-4 mr-2" />
-                      Add to Cart
-                    </Button>
-                  </CardContent>
-                  
-                  {/* Hover overlay with additional details */}
-                  <div
-                    className={`absolute inset-0 bg-gradient-to-br from-primary/95 via-secondary/95 to-accent/95 backdrop-blur-sm transition-all duration-500 flex items-center justify-center p-6 ${
-                        hoveredSpice === index ? "opacity-100" : "opacity-0 pointer-events-none"
-                      }`}
-                    >
-                    <div className="text-white text-center space-y-4">
-                      <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <Sparkles className="w-8 h-8 text-white" />
-                      </div>
-                      <h4 className="text-xl font-bold font-[family-name:var(--font-playfair)] mb-2">
-                        {spice.name}
-                      </h4>
-                      <p className="text-sm leading-relaxed opacity-90 mb-4">
-                        {spice.details}
-                      </p>
-                        <div className="space-y-2">
-                        <p className="text-xs font-semibold text-white/80 uppercase tracking-wide">
-                          Culinary Applications:
-                        </p>
-                          <div className="flex flex-wrap gap-2 justify-center">
-                            {spice.uses.map((use, useIndex) => (
-                              <Badge 
-                                key={useIndex} 
-                                variant="secondary" 
-                              className="text-xs bg-white/20 text-white border-white/30 hover:bg-white/30 transition-all duration-200"
-                              >
-                                {use}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-                      <div className="pt-3 border-t border-white/20">
-                        <p className="text-xs text-white/70">
-                          Origin: <span className="text-white font-semibold">{spice.origin}</span>
-                        </p>
-                        <p className="text-xs text-white/70">
-                          Flavor Profile: <span className="text-white font-semibold">{spice.flavor}</span>
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-              </Card>
-            ))
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* Spice Categories */}
-      <section className="py-20 bg-gradient-to-r from-primary/5 via-secondary/5 to-accent/5">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h3 className="text-4xl font-bold font-[family-name:var(--font-playfair)] text-foreground mb-4">
-              Explore Spice Categories
-            </h3>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto text-pretty">
-              From warming spices to exotic blends, discover the perfect flavor for every dish
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[
-              {
-                name: "Warming Spices",
-                description: "Cinnamon, nutmeg, and cloves for cozy comfort",
-                icon: "🔥",
-                count: "12 varieties",
-                color: "from-orange-500 to-red-500"
-              },
-              {
-                name: "Aromatic Herbs",
-                description: "Fresh and dried herbs for bright flavors",
-                icon: "🌿",
-                count: "18 varieties",
-                color: "from-green-500 to-emerald-500"
-              },
-              {
-                name: "Exotic Blends",
-                description: "Traditional spice mixtures from around the world",
-                icon: "🌍",
-                count: "8 blends",
-                color: "from-purple-500 to-indigo-500"
-              },
-              {
-                name: "Hot & Spicy",
-                description: "Chilies and peppers for bold heat",
-                icon: "🌶️",
-                count: "15 varieties",
-                color: "from-red-600 to-orange-600"
-              },
-              {
-                name: "Sweet Spices",
-                description: "Vanilla, cardamom, and saffron for desserts",
-                icon: "🍯",
-                count: "10 varieties",
-                color: "from-yellow-400 to-amber-500"
-              },
-              {
-                name: "Umami Boosters",
-                description: "Mushroom powders and fermented spices",
-                icon: "🍄",
-                count: "6 varieties",
-                color: "from-brown-600 to-gray-700"
+            {/* Stat 2: Countries with Sparkline */}
+            <StatWithSparkline
+              value={25}
+              suffix="+"
+              label="Source Countries"
+              icon={
+                <svg className="w-7 h-7" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                </svg>
               }
-            ].map((category, index) => (
-              <Card 
-                key={index} 
-                className="group hover:shadow-xl transition-all duration-500 hover:-translate-y-2 border-border/50 relative overflow-hidden"
-                style={{
-                  animationDelay: `${index * 100}ms`,
-                  opacity: isSpiceSectionVisible ? 1 : 0,
-                  transform: isSpiceSectionVisible ? 'translateY(0)' : 'translateY(20px)',
-                  transition: `all 0.6s ease ${index * 100}ms`
-                }}
-              >
-                <div className={`absolute inset-0 bg-gradient-to-br ${category.color} opacity-10 group-hover:opacity-20 transition-opacity duration-500`}></div>
-                <CardContent className="p-8 relative z-10">
-                  <div className="text-4xl mb-4">{category.icon}</div>
-                  <h4 className="text-2xl font-bold font-[family-name:var(--font-playfair)] text-foreground mb-3">
-                    {category.name}
-                  </h4>
-                  <p className="text-muted-foreground mb-4">{category.description}</p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-primary">{category.count}</span>
-                    <Button variant="outline" size="sm" className="group-hover:bg-primary group-hover:text-white transition-all duration-300">
-                      Explore
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
+              color="#fbbf24"
+              data={[15, 18, 17, 20, 22, 21, 23, 25]}
+              trend="up"
+            />
 
-      {/* Featured Collections */}
-      <section ref={collectionsSectionRef} className="py-20 bg-gradient-to-r from-primary/5 via-secondary/5 to-accent/5">
+            {/* Stat 3: Customers with Interactive Card */}
+            <InteractiveStatCard
+              value={10000}
+              suffix="+"
+              label="Happy Customers"
+              description="Worldwide satisfaction"
+              icon={<Heart className="w-8 h-8" />}
+              color="#ef4444"
+              trend={25}
+              trendLabel="growth"
+            />
+
+            {/* Stat 4: Recipes with Circular */}
+            <CircularStat
+              value={500}
+              max={1000}
+              suffix="+"
+              label="Authentic Recipes"
+              description="Chef-approved dishes"
+              icon={<BookOpen className="w-8 h-8" />}
+              color="#f97316"
+              showPercentage
+              trend={8}
+            />
+          </StatsGrid>
+                  </div>
+      </FluidSection>
+
+      {/* Features Section with Fluid Design */}
+      <FluidSection variant="medium" showOrganic gloss>
         <div className="container mx-auto px-4">
-          <div className={`text-center mb-16 transition-all duration-1000 ${isCollectionsSectionVisible && hasInitialized ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
-            <h3 className="text-4xl font-bold font-[family-name:var(--font-playfair)] text-foreground mb-4">
-              Curated Collections
-            </h3>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto text-pretty">
-              Hand-picked spice combinations for every culinary journey
-            </p>
-          </div>
-
-          <div className={`grid grid-cols-1 md:grid-cols-2 gap-8 transition-all duration-1000 ${isCollectionsSectionVisible && hasInitialized ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
-            {[
-              {
-                title: "Moroccan Magic",
-                description: "Complete your tagine with our signature Moroccan blend",
-                spices: ["Ras el Hanout", "Cinnamon", "Ginger", "Turmeric"],
-                price: "$34.99",
-                icon: "🏺",
-                color: "from-orange-500 to-red-500",
-                benefits: ["Authentic flavor", "Perfect balance", "Traditional blend"]
-              },
-              {
-                title: "Indian Feast",
-                description: "Essential spices for authentic Indian cuisine",
-                spices: ["Cardamom", "Cumin", "Coriander", "Saffron"],
-                price: "$42.99",
-                icon: "🕉️",
-                color: "from-yellow-500 to-orange-500",
-                benefits: ["Rich aromas", "Complex flavors", "Heritage blend"]
-              }
-            ].map((collection, index) => (
-              <Card 
-                key={index} 
-                className="group hover:shadow-2xl transition-all duration-600 hover:-translate-y-3 border-border/50 relative overflow-hidden bg-gradient-to-br from-background to-card"
-                style={{
-                  animationDelay: `${index * 200}ms`,
-                  opacity: isCollectionsSectionVisible ? 1 : 0,
-                  transform: isCollectionsSectionVisible ? 'translateY(0)' : 'translateY(20px)',
-                  transition: `all 0.6s ease ${index * 200}ms`
-                }}
-              >
-                <CardHeader className="p-6 pb-4">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center space-x-3">
-                      <div className={`w-16 h-16 bg-gradient-to-br ${collection.color} rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
-                        <span className="text-3xl">{collection.icon}</span>
-                      </div>
-                      <div>
-                        <h4 className="text-2xl font-bold font-[family-name:var(--font-playfair)] text-foreground group-hover:text-primary transition-colors duration-300">
-                      {collection.title}
-                    </h4>
-                        <p className="text-muted-foreground text-sm leading-relaxed">
-                          {collection.description}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="mb-4">
-                    <h5 className="font-medium text-foreground mb-2 text-sm uppercase tracking-wide">
-                      Included Spices:
-                    </h5>
-                    <div className="flex flex-wrap gap-2">
-                      {collection.spices.map((spice, spiceIndex) => (
-                        <Badge 
-                          key={spiceIndex} 
-                          variant="secondary" 
-                          className="text-xs hover:scale-110 hover:bg-secondary/80 transition-all duration-200 cursor-pointer group-hover:bg-secondary/60"
-                        >
-                          ✨ {spice}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                </CardHeader>
-                
-                <CardContent className="p-6 pt-0">
-                  <div className="mb-4 p-3 bg-muted/30 rounded-lg border border-border/50 group-hover:bg-muted/50 transition-colors duration-300">
-                    <h5 className="font-semibold text-foreground mb-3 text-sm uppercase tracking-wide">
-                      Collection Benefits:
-                    </h5>
-                    <ul className="space-y-2 text-sm text-muted-foreground">
-                      {collection.benefits.map((benefit, benefitIndex) => (
-                        <li key={benefitIndex} className="flex items-center group/item hover:translate-x-1 transition-transform duration-200">
-                          <span className="w-2 h-2 bg-primary rounded-full mr-3 flex-shrink-0 group-hover/item:scale-150 transition-transform duration-200"></span>
-                          {benefit}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  
-                    <div className="flex items-center justify-between">
-                    <span className="text-2xl font-bold text-primary group-hover:scale-110 transition-transform duration-300">
-                      {collection.price}
-                    </span>
-                    <div className="flex items-center space-x-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300 hover:scale-105"
-                      >
-                        <Heart className="w-4 h-4 mr-2" />
-                        Wishlist
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        className="bg-primary hover:bg-primary/90 group-hover:scale-105 transition-all duration-300"
-                      >
-                        View Collection
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-                
-                {/* Interactive hover overlay */}
-                <div
-                  className={`absolute inset-0 bg-gradient-to-br from-primary/95 via-secondary/95 to-accent/95 backdrop-blur-sm transition-all duration-500 flex items-center justify-center p-6 ${
-                    hoveredSpice === index ? "opacity-100" : "opacity-0 pointer-events-none"
-                  }`}
-                >
-                  <div className="text-white text-center space-y-4">
-                    <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <span className="text-3xl">{collection.icon}</span>
-                    </div>
-                    <h4 className="text-xl font-bold font-[family-name:var(--font-playfair)] mb-2">
-                      {collection.title}
-                    </h4>
-                    <p className="text-sm leading-relaxed opacity-90 mb-4">
-                      {collection.description}
-                    </p>
-                    <div className="space-y-2">
-                      <p className="text-xs font-semibold text-white/80 uppercase tracking-wide">
-                        Perfect for: <span className="text-white font-semibold">Authentic cooking</span>
-                      </p>
-                      <p className="text-xs font-semibold text-white/80 uppercase tracking-wide">
-                        Value: <span className="text-white font-semibold">Save 15% vs individual</span>
-                      </p>
-                    </div>
-                    <div className="pt-3 border-t border-white/20">
-                      <p className="text-xs text-white/70">
-                        Includes: <span className="text-white font-semibold">{collection.spices.length} premium spices</span>
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
-          
-          {/* Collection Categories */}
-          <div className="mt-16">
-            <h4 className="text-2xl font-bold font-[family-name:var(--font-playfair)] text-foreground mb-8 text-center">
-              Explore More Collections
-            </h4>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {[
-                { name: "Starter Kits", icon: "🎁", count: "8 kits", color: "from-blue-500 to-indigo-500" },
-                { name: "Chef's Choice", icon: "👨‍🍳", count: "12 collections", color: "from-purple-500 to-pink-500" },
-                { name: "Seasonal", icon: "🍂", count: "6 collections", color: "from-green-500 to-emerald-500" },
-                { name: "Limited Edition", icon: "⭐", count: "4 collections", color: "from-yellow-500 to-orange-500" }
-              ].map((category, index) => (
-                <div 
-                  key={index} 
-                  className="group cursor-pointer"
-                  style={{
-                    animationDelay: `${index * 100}ms`,
-                    opacity: isCollectionsSectionVisible ? 1 : 0,
-                    transform: isCollectionsSectionVisible ? 'translateY(0)' : 'translateY(20px)',
-                    transition: `all 0.6s ease ${index * 100}ms`
-                  }}
-                >
-                  <div className={`bg-gradient-to-br ${category.color} p-4 rounded-lg text-center hover:scale-105 transition-all duration-300`}>
-                    <div className="text-3xl mb-2 group-hover:scale-110 transition-transform duration-300">
-                      {category.icon}
-                    </div>
-                    <h5 className="font-semibold text-white mb-1">{category.name}</h5>
-                    <p className="text-white/80 text-sm">{category.count}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Culinary Inspirations */}
-      <section ref={recipeSectionRef} id="recipes" className="py-20 bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5">
-        <div className="container mx-auto px-4">
-          <div className={`text-center mb-16 transition-all duration-1000 ${isRecipeSectionVisible && hasInitialized ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
-            <h3 className="text-4xl font-bold font-[family-name:var(--font-playfair)] text-foreground mb-4">
-              Culinary Inspirations
-            </h3>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto text-pretty">
-              Traditional recipes that celebrate the art of spice blending
-            </p>
-          </div>
-
-          <div className={`grid grid-cols-1 md:grid-cols-3 gap-8 transition-all duration-1000 ${isRecipeSectionVisible && hasInitialized ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
-            {recipes.map((recipe, index) => (
-              <div key={index} className="group">
-                <Card 
-                  className="h-full hover:shadow-2xl transition-all duration-600 hover:-translate-y-3 border-border/50 relative overflow-hidden bg-gradient-to-br from-background to-card"
-                  style={{
-                    animationDelay: `${index * 150}ms`,
-                    opacity: isRecipeSectionVisible ? 1 : 0,
-                    transform: isRecipeSectionVisible ? 'translateY(0)' : 'translateY(20px)',
-                    transition: `all 0.6s ease ${index * 150}ms`
-                  }}
-                >
-                  <CardHeader className="p-6 pb-4">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-12 h-12 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                          <span className="text-2xl">
-                            {recipe.title.includes('Tagine') ? '🥘' : recipe.title.includes('Biryani') ? '🍚' : '🍽️'}
-                          </span>
-                        </div>
-                        <div>
-                          <h4 className="text-xl font-bold font-[family-name:var(--font-playfair)] text-foreground group-hover:text-primary transition-colors duration-300">
-                          {recipe.title}
-                        </h4>
-                          <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                            <span className="flex items-center">
-                              <span className="mr-1">⏱️</span>
-                              {recipe.time}
-                            </span>
-                            <span className="flex items-center">
-                              <span className="mr-1">📊</span>
-                              {recipe.difficulty}
-                            </span>
-                        </div>
-                      </div>
-                      </div>
-                    </div>
-                    
-                    <p className="text-sm text-muted-foreground leading-relaxed italic mb-4">
-                      {recipe.description}
-                    </p>
-                    
-                      <div className="mb-4">
-                      <h5 className="font-medium text-foreground mb-2 text-sm uppercase tracking-wide">
-                        Key Spices:
-                      </h5>
-                        <div className="flex flex-wrap gap-2">
-                          {recipe.spices.map((spice, spiceIndex) => (
-                          <Badge 
-                            key={spiceIndex} 
-                            variant="secondary" 
-                            className="text-xs hover:scale-110 hover:bg-secondary/80 transition-all duration-200 cursor-pointer group-hover:bg-secondary/60"
-                          >
-                            ✨ {spice}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                  </CardHeader>
-                  
-                  <CardContent className="p-6 pt-0">
-                    <div className="mb-4 p-3 bg-muted/30 rounded-lg border border-border/50 group-hover:bg-muted/50 transition-colors duration-300">
-                      <h5 className="font-semibold text-foreground mb-3 text-sm uppercase tracking-wide">
-                        Essential Ingredients:
-                      </h5>
-                      <ul className="space-y-2 text-sm text-muted-foreground">
-                        {recipe.ingredients.slice(0, 4).map((ingredient, ingredientIndex) => (
-                          <li key={ingredientIndex} className="flex items-center group/item hover:translate-x-1 transition-transform duration-200">
-                            <span className="w-2 h-2 bg-primary rounded-full mr-3 flex-shrink-0 group-hover/item:scale-150 transition-transform duration-200"></span>
-                            {ingredient}
-                          </li>
-                        ))}
-                        {recipe.ingredients.length > 4 && (
-                          <li className="text-xs text-primary font-medium cursor-pointer hover:underline">
-                            +{recipe.ingredients.length - 4} more ingredients
-                          </li>
-                        )}
-                      </ul>
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <Button
-                        variant="outline"
-                        size="sm" 
-                        className="group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300 hover:scale-105"
-                        onClick={() => toggleRecipeFlip(index)}
-                      >
-                        <BookOpen className="w-4 h-4 mr-2" />
-                        View Recipe
-                      </Button>
-                      
-                      <div className="flex items-center space-x-2">
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="group-hover:bg-secondary/20 group-hover:text-secondary transition-all duration-300 hover:scale-105"
-                        >
-                          <Heart className="w-4 h-4" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="group-hover:bg-accent/20 group-hover:text-accent transition-all duration-300 hover:scale-105"
-                        >
-                          <Share className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                    </CardContent>
-                  
-                  {/* Interactive hover overlay */}
-                  <div
-                    className={`absolute inset-0 bg-gradient-to-br from-primary/95 via-secondary/95 to-accent/95 backdrop-blur-sm transition-all duration-500 flex items-center justify-center p-6 ${
-                      hoveredSpice === index ? "opacity-100" : "opacity-0 pointer-events-none"
-                    }`}
-                  >
-                    <div className="text-white text-center space-y-4">
-                      <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <BookOpen className="w-8 h-8 text-white" />
-                      </div>
-                      <h4 className="text-xl font-bold font-[family-name:var(--font-playfair)] mb-2">
-                        {recipe.title}
-                      </h4>
-                      <p className="text-sm leading-relaxed opacity-90 mb-4">
-                        {recipe.description}
-                      </p>
-                      <div className="space-y-2">
-                        <p className="text-xs font-semibold text-white/80 uppercase tracking-wide">
-                          Cooking Time: {recipe.time}
-                        </p>
-                        <p className="text-xs font-semibold text-white/80 uppercase tracking-wide">
-                          Difficulty: {recipe.difficulty}
-                        </p>
-                      </div>
-                      <div className="pt-3 border-t border-white/20">
-                        <p className="text-xs text-white/70">
-                          Perfect for: <span className="text-white font-semibold">Family dinners, Special occasions</span>
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  </Card>
-              </div>
-            ))}
-          </div>
-          
-          {/* Interactive Recipe Categories */}
-          <div className="mt-16">
-            <h4 className="text-2xl font-bold font-[family-name:var(--font-playfair)] text-foreground mb-8 text-center">
-              Explore Recipe Categories
-            </h4>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {[
-                { name: "Quick & Easy", icon: "⚡", count: "25 recipes", color: "from-green-500 to-emerald-500" },
-                { name: "Traditional", icon: "🏺", count: "40 recipes", color: "from-orange-500 to-red-500" },
-                { name: "Vegetarian", icon: "🥬", count: "30 recipes", color: "from-green-600 to-teal-600" },
-                { name: "Spice-Forward", icon: "🌶️", count: "35 recipes", color: "from-red-600 to-pink-600" }
-              ].map((category, index) => (
-                <div 
-                  key={index} 
-                  className="group cursor-pointer"
-                  style={{
-                    animationDelay: `${index * 100}ms`,
-                    opacity: isRecipeSectionVisible ? 1 : 0,
-                    transform: isRecipeSectionVisible ? 'translateY(0)' : 'translateY(20px)',
-                    transition: `all 0.6s ease ${index * 100}ms`
-                  }}
-                >
-                  <div className={`bg-gradient-to-br ${category.color} p-4 rounded-lg text-center hover:scale-105 transition-all duration-300`}>
-                    <div className="text-3xl mb-2 group-hover:scale-110 transition-transform duration-300">
-                      {category.icon}
-                    </div>
-                    <h5 className="font-semibold text-white mb-1">{category.name}</h5>
-                    <p className="text-white/80 text-sm">{category.count}</p>
-                </div>
-              </div>
-            ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Cultural Stories */}
-      <section
-        id="stories"
-        className="py-20 bg-gradient-to-r from-primary/5 via-secondary/5 to-accent/5 relative overflow-hidden"
-      >
-        <div className="absolute inset-0 bg-[url('/traditional-spice-merchant-in-moroccan-bazaar-with.png')] bg-fixed bg-cover bg-center opacity-5"></div>
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="text-center mb-16">
-            <h3 className="text-4xl font-bold font-[family-name:var(--font-playfair)] text-foreground mb-4">
-              Stories Behind the Spices
-            </h3>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto text-pretty">
-              Every spice carries centuries of tradition, culture, and heritage
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div className="group">
-              <img
-                src="/traditional-spice-merchant-in-moroccan-bazaar-with.png"
-                alt="Traditional spice merchant"
-                className="rounded-lg shadow-2xl group-hover:scale-105 transition-transform duration-500"
-              />
-            </div>
-            <div className="space-y-6">
-              <h4 className="text-3xl font-bold font-[family-name:var(--font-playfair)] text-foreground">
-                The Ancient Spice Routes
-              </h4>
-              <p className="text-lg text-muted-foreground text-pretty">
-                For thousands of years, spices have been more than just flavor enhancers. They were currency, medicine,
-                and symbols of wealth and power. Our spices follow the same ancient routes that connected civilizations.
+          <ScrollReveal>
+            <div className="text-center mb-16">
+              <h2 className="text-4xl md:text-5xl font-bold font-[family-name:var(--font-playfair)] text-foreground mb-4">
+                Why Choose Spice Bazaar
+              </h2>
+              <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+                Experience the difference of authentic, hand-selected spices sourced directly from the world's most renowned spice-growing regions. Our commitment to quality means every jar is filled with the finest ingredients, carefully curated to bring the vibrant flavors and aromatic richness of global cuisine to your kitchen. From the golden threads of Spanish saffron to the complex blends of Moroccan souks, discover spices that tell stories of tradition, culture, and culinary excellence.
               </p>
-              <div className="space-y-4">
-                <div className="flex items-start space-x-3 group hover:translate-x-2 transition-transform duration-300">
-                  <div className="w-2 h-2 bg-primary rounded-full mt-2 group-hover:scale-150 transition-transform duration-300"></div>
-                  <div>
-                    <h5 className="font-semibold text-foreground font-[family-name:var(--font-dancing)] text-lg">
-                      Moroccan Tradition
-                    </h5>
-                    <p className="text-muted-foreground">
-                      Hand-blended spices passed down through generations of master spice merchants
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start space-x-3 group hover:translate-x-2 transition-transform duration-300 delay-100">
-                  <div className="w-2 h-2 bg-secondary rounded-full mt-2 group-hover:scale-150 transition-transform duration-300"></div>
-                  <div>
-                    <h5 className="font-semibold text-foreground font-[family-name:var(--font-dancing)] text-lg">
-                      Indian Heritage
-                    </h5>
-                    <p className="text-muted-foreground">
-                      Sourced directly from family farms in Kerala, Kashmir, and Tamil Nadu
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start space-x-3 group hover:translate-x-2 transition-transform duration-300 delay-200">
-                  <div className="w-2 h-2 bg-accent rounded-full mt-2 group-hover:scale-150 transition-transform duration-300"></div>
-                  <div>
-                    <h5 className="font-semibold text-foreground font-[family-name:var(--font-dancing)] text-lg">
-                      Sustainable Sourcing
-                    </h5>
-                    <p className="text-muted-foreground">
-                      Supporting local communities and traditional farming methods
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <Button size="lg" className="mt-6 hover:scale-105 transition-all duration-300 hover:shadow-lg">
-                Learn Our Story
-              </Button>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Customer Testimonials */}
-      <section className="py-20 bg-card/30">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h3 className="text-4xl font-bold font-[family-name:var(--font-playfair)] text-foreground mb-4">
-              What Our Customers Say
-            </h3>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto text-pretty">
-              Discover why chefs and home cooks choose our authentic spices
-            </p>
-          </div>
+          </ScrollReveal>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              {
-                name: "Chef Maria Rodriguez",
-                role: "Executive Chef, La Cocina",
-                image: "/placeholder-user.jpg",
-                rating: 5,
-                comment: "The saffron threads are absolutely exceptional. They've transformed my paella and risotto dishes. The quality is unmatched!"
-              },
-              {
-                name: "David Chen",
-                role: "Home Cook & Food Blogger",
-                image: "/placeholder-user.jpg",
-                rating: 5,
-                comment: "I've been using their Ras el Hanout for months. The depth of flavor it adds to my Moroccan tagines is incredible."
-              },
-              {
-                name: "Sarah Johnson",
-                role: "Restaurant Owner",
-                image: "/placeholder-user.jpg",
-                rating: 5,
-                comment: "Our customers can't get enough of the cardamom pods. They're the secret ingredient in our signature chai blend."
-              }
-            ].map((testimonial, index) => (
-              <Card key={index} className="group hover:shadow-xl transition-all duration-500 hover:-translate-y-2 border-border/50 relative overflow-hidden">
-                <CardContent className="p-8">
-                  <div className="flex items-center mb-4">
-                    <div className="w-12 h-12 rounded-full overflow-hidden mr-4">
-                      <img
-                        src={testimonial.image}
-                        alt={testimonial.name}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-foreground">{testimonial.name}</h4>
-                      <p className="text-sm text-muted-foreground">{testimonial.role}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center mb-4">
-                    {Array.from({ length: testimonial.rating }).map((_, i) => (
-                      <Star key={i} className="w-4 h-4 fill-secondary text-secondary" />
-                    ))}
-                  </div>
-                  <p className="text-muted-foreground italic">"{testimonial.comment}"</p>
-                </CardContent>
-              </Card>
+            {features.map((feature, index) => (
+              <ScrollReveal key={index} delay={index * 100}>
+                <GlossyCard glowColor="#c65d32" className="p-8 h-full">
+                  <motion.div
+                    className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-6"
+                    style={{
+                      background: 'linear-gradient(135deg, #c65d3240 0%, #fbbf2440 100%)',
+                      boxShadow: '0 4px 20px #c65d3230',
+                    }}
+                    whileHover={{ scale: 1.1, rotate: 5 }}
+                  >
+                    {feature.icon}
+                  </motion.div>
+                  <h3 className="text-2xl font-bold font-[family-name:var(--font-playfair)] text-foreground mb-3">
+                    {feature.title}
+                  </h3>
+                  <p className="text-muted-foreground leading-relaxed">
+                    {feature.description}
+                  </p>
+                  {feature.link && (
+                    <a
+                      href={feature.link.href}
+                      className="inline-flex items-center text-primary hover:text-secondary transition-colors mt-4 font-medium"
+                    >
+                      {feature.link.label}
+                      <svg
+                        className="w-4 h-4 ml-1"
+                        fill="none"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path d="M9 5l7 7-7 7" />
+                      </svg>
+                    </a>
+                  )}
+                </GlossyCard>
+              </ScrollReveal>
             ))}
           </div>
         </div>
-      </section>
+      </FluidSection>
 
-      {/* Newsletter Signup */}
-      <section className="py-20 bg-gradient-to-r from-primary/10 via-secondary/10 to-accent/10">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h3 className="text-4xl font-bold font-[family-name:var(--font-playfair)] text-foreground mb-4">
-              Stay Spice-Inspired
-            </h3>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto text-pretty mb-8">
-              Get exclusive recipes, spice tips, and cultural stories delivered to your inbox
-            </p>
-            
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center max-w-md mx-auto">
-              <input
-                type="email"
-                placeholder="Enter your email address"
-                className="flex-1 px-4 py-3 border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
-              />
-              <Button size="lg" className="shrink-0 hover:scale-105 transition-all duration-300">
-                Subscribe
-              </Button>
-            </div>
-            
-            <p className="text-sm text-muted-foreground mt-4">
-              Join 5,000+ spice enthusiasts. Unsubscribe anytime.
-            </p>
-          </div>
-        </div>
-      </section>
+      {/* Featured Spices - Visual Marvel */}
+      <ProductsSection
+        title="Premium Spice Collection"
+        subtitle="Discover our hand-selected collection of the world's finest spices, sourced directly from the most renowned spice-growing regions. Each spice in our collection is carefully chosen for its exceptional quality, vibrant color, and authentic flavor profile. From the golden saffron fields of Kashmir to the aromatic spice markets of Marrakech, we bring you the very best that global cuisine has to offer, ensuring every dish you create is infused with the rich heritage and tradition of spice trading."
+        products={featuredSpices}
+        showFilter
+        columns={4}
+        onAddToCart={handleAddToCart}
+        onAddToWishlist={handleAddToWishlist}
+      />
 
-      {/* Floating Action Button */}
-      <div className="fixed bottom-6 right-6 z-50">
-        <div className="flex flex-col space-y-3">
-          <Button
-            size="icon"
-            className="w-12 h-12 bg-primary hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 group"
-            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          >
-            <span className="group-hover:rotate-180 transition-transform duration-300">↑</span>
-          </Button>
-          
-          <Button
-            size="icon"
-            variant="outline"
-            className="w-12 h-12 bg-background/80 backdrop-blur-sm border-border/50 hover:bg-background shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 group"
-          >
-            <Heart className="w-5 h-5 group-hover:text-red-500 transition-colors duration-300" />
-          </Button>
-          
-          <Button
-            size="icon"
-            variant="outline"
-            className="w-12 h-12 bg-background/80 backdrop-blur-sm border-border/50 hover:bg-background shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 group"
-          >
-            <ShoppingCart className="w-5 h-5 group-hover:text-primary transition-colors duration-300" />
-          </Button>
-        </div>
-      </div>
+      {/* Spice Categories - Visual Marvel */}
+      <CategoriesSection
+        title="Explore Spice Categories"
+        subtitle="Journey through our carefully curated spice categories, each designed to help you discover the perfect flavors for your culinary creations. From warming spices that add cozy comfort to winter dishes, to exotic blends that transport your taste buds to distant lands, our categories make it easy to explore the vast world of spices. Whether you're crafting a delicate dessert, preparing a fiery curry, or seeking the perfect herb blend, find inspiration and guidance in our organized collections."
+        categories={spiceCategories}
+        onCategoryClick={(categoryId) => {
+          showNotification({
+            type: 'info',
+            title: 'Category Selected',
+            message: `Viewing ${spiceCategories.find(c => c.id === categoryId)?.name}`,
+          })
+        }}
+      />
 
-      {/* Footer */}
-      <footer className="bg-card border-t border-border py-12">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div>
-              <div className="flex items-center space-x-2 mb-4">
-                <Sparkles className="h-6 w-6 text-primary" />
-                <h5 className="text-xl font-bold font-[family-name:var(--font-playfair)] text-primary">Spice Bazaar</h5>
-              </div>
-              <p className="text-muted-foreground text-sm">
-                Bringing authentic flavors from the world's finest spice markets to your kitchen.
-              </p>
-            </div>
-            <div>
-              <h6 className="font-semibold text-foreground mb-4">Shop</h6>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>
-                  <a href="#" className="hover:text-primary transition-colors">
-                    All Spices
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-primary transition-colors">
-                    Spice Blends
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-primary transition-colors">
-                    Gift Sets
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-primary transition-colors">
-                    New Arrivals
-                  </a>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h6 className="font-semibold text-foreground mb-4">Learn</h6>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>
-                  <a href="#" className="hover:text-primary transition-colors">
-                    Recipes
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-primary transition-colors">
-                    Spice Guide
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-primary transition-colors">
-                    Cooking Tips
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-primary transition-colors">
-                    Cultural Stories
-                  </a>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h6 className="font-semibold text-foreground mb-4">Connect</h6>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>
-                  <a href="#" className="hover:text-primary transition-colors">
-                    About Us
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-primary transition-colors">
-                    Contact
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-primary transition-colors">
-                    Newsletter
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-primary transition-colors">
-                    Social Media
-                  </a>
-                </li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-border mt-8 pt-8 text-center">
-            <p className="text-sm text-muted-foreground">
-              © 2024 Spice Bazaar. All rights reserved. Made with ❤️ for spice lovers everywhere.
-            </p>
-          </div>
-        </div>
-      </footer>
-    </div>
+      {/* Featured Collections - Visual Marvel */}
+      <CollectionsSection
+        title="Curated Collections"
+        subtitle="Our expertly curated spice collections are thoughtfully assembled to bring you the perfect combinations for every culinary adventure. Each collection is designed by our spice experts, who understand how different spices complement and enhance each other. Whether you're embarking on a Moroccan culinary journey, exploring the depths of Indian cuisine, or creating your own signature dishes, these collections provide everything you need in one beautifully packaged set. Save time and discover new flavor combinations that will elevate your cooking to new heights."
+        collections={featuredCollections}
+        onAddToCart={handleAddToCart}
+        onAddToWishlist={handleAddToWishlist}
+      />
+
+      {/* Culinary Inspirations - Visual Marvel */}
+      <RecipesSection
+        title="Culinary Inspirations"
+        subtitle="Immerse yourself in the rich traditions of global cuisine with our collection of authentic, time-honored recipes. Each recipe celebrates the art of spice blending, showcasing how carefully selected spices can transform simple ingredients into extraordinary dishes. From the slow-cooked complexity of Moroccan tagines to the fragrant layers of Indian biryani, these recipes have been passed down through generations, preserving the culinary wisdom of master chefs and home cooks. Follow our step-by-step guides to recreate these iconic dishes in your own kitchen, and discover the magic that happens when spices meet tradition."
+        recipes={featuredRecipes}
+        onViewRecipe={(recipeId) => {
+          showNotification({
+            type: 'success',
+            title: 'Opening Recipe',
+            message: `Viewing ${featuredRecipes.find(r => r.id === recipeId)?.title}`,
+          })
+        }}
+        onSaveRecipe={(recipeId) => {
+          showNotification({
+            type: 'info',
+            title: 'Recipe Saved',
+            message: 'Added to your cookbook!',
+          })
+        }}
+      />
+
+      {/* Cultural Stories - Visual Marvel */}
+      <StoriesSection
+        title="Stories Behind the Spices"
+        subtitle="Every spice in our collection carries with it centuries of tradition, culture, and heritage. Behind each jar lies a rich tapestry of history—from ancient trade routes that connected civilizations to family recipes passed down through generations. Our spices are more than just ingredients; they are storytellers, each one whispering tales of distant lands, traditional farming methods, and the communities that have cultivated them for thousands of years. Discover the fascinating journeys these spices have taken from field to your kitchen, and connect with the cultures and people who have made them an essential part of global cuisine."
+        stories={culturalStories}
+        onReadMore={(storyId) => {
+          showNotification({
+            type: 'info',
+            title: 'Opening Story',
+            message: `Reading ${culturalStories.find(s => s.id === storyId)?.title}`,
+          })
+        }}
+      />
+
+      {/* Customer Testimonials - Visual Marvel */}
+      <TestimonialsSection
+        title="What Our Customers Say"
+        subtitle="Join thousands of satisfied chefs, home cooks, and culinary enthusiasts who have discovered the transformative power of authentic, high-quality spices. Our customers consistently praise the exceptional quality, vibrant flavors, and authentic character of our spices. From professional chefs who rely on our products in their restaurants to home cooks who have elevated their everyday cooking, discover why Spice Bazaar has become the trusted source for premium spices worldwide. Read their stories and see how our spices have inspired their culinary journeys."
+        testimonials={customerTestimonials}
+        showAll
+      />
+
+      {/* Newsletter Signup - Visual Marvel */}
+      <NewsletterSection
+        subscriberCount={5247}
+        showStats
+        onSubscribe={(email) => {
+          showNotification({
+            type: 'success',
+            title: 'Welcome to the Spice Club! 🎉',
+            message: 'Check your inbox for a confirmation email',
+          })
+        }}
+      />
+
+      {/* Footer - Visual Marvel */}
+      <FluidFooter
+        showNewsletter={false}
+        onNewsletterSubscribe={(email) => {
+          showNotification({
+            type: 'success',
+            title: 'Subscribed!',
+            message: 'Thank you for joining our newsletter',
+          })
+        }}
+      />
+
+      {/* Enhanced Floating Action Buttons - Visual Marvel */}
+      <FABCluster
+        cartCount={cartCount}
+        wishlistCount={wishlistCount}
+        onCartClick={() => {
+          showNotification({
+            type: 'info',
+            title: 'Shopping Cart',
+            message: `You have ${cartCount} items in your cart`,
+          })
+        }}
+        onWishlistClick={() => {
+          showNotification({
+            type: 'info',
+            title: 'Wishlist',
+            message: `You have ${wishlistCount} items in your wishlist`,
+          })
+        }}
+        onChatClick={() => {
+          showNotification({
+            type: 'success',
+            title: 'Chat Support',
+            message: 'Our team is here to help!',
+          })
+        }}
+      />
+    </>
   )
 }
+
+export default function EnhancedSpiceBazaarHome() {
+  return (
+    <NotificationProvider>
+      <HomePageContent />
+    </NotificationProvider>
+  )
+}
+
