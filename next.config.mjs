@@ -21,11 +21,11 @@ const nextConfig = {
       '@radix-ui/react-icons',
       'date-fns',
     ],
-    // Optimize server components
-    serverComponentsExternalPackages: ['@prisma/client'],
   },
+  // Server external packages (moved from experimental in Next.js 15)
+  serverExternalPackages: ['@prisma/client'],
   // Bundle optimization
-  swcMinify: true,
+  // swcMinify is now default in Next.js 15, no need to specify
   compress: true,
   // Webpack configuration for code splitting
   webpack: (config, { isServer }) => {
